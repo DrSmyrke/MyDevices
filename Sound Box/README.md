@@ -6,3 +6,6 @@ Simple MIDI AVR Ringer
 
 ### Freq Table
 ![Sample schematic](Images/Freq.png)
+
+### Musical card
+![Sample schematic](sheme/Sound box.JPG)
