@@ -8,4 +8,4 @@ Simple MIDI AVR Ringer
 ![Sample schematic](Images/Freq.png)
 
 ### Musical card
-![Sample schematic](sheme/Musical card.JPG)
+![Sample schematic](sheme/MusicalCard.jpg)
