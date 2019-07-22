@@ -8,4 +8,4 @@ Universal device for smart home with motion sensor
 ![Sample image](img/shematic.jpg)
 
 ### Photos
-http://drsmyrke-home.pskovline.ru/projects/?cat=DIY&item=Motion%20Switch
+http://drsmyrke.ru/projects/?cat=DIY&item=Motion%20Switch
