@@ -1,4 +1,4 @@
-#define F_CPU 8000000UL
+﻿#define F_CPU 8000000UL
 
 #define LED1_INIT				pinModePB(1,OUTPUT)
 #define LED1_ON					setZero(PORTB,1)
@@ -32,17 +32,17 @@ void ms100(void)
 //Функция вызыается раз в секунду
 void second(void)
 {
-	
+	if(batF) LED1_TOGGLE;
 }
 
 int main(void)
 {
 	init();
-	t0_init();
-	//int0_init();
+	//t0_init();
+	int0_init();
 	sleep_init();
 	//comparator_init();
-	//adc_init();
+	adc_init();
 	sei();
 	
 	sleep_enable();
@@ -51,21 +51,20 @@ int main(void)
 	
 	while(1){
 		//Запускаем ADC
-		//ADCSRA |=(1<<ADSC);
-		//delay(650);
+		ADCSRA |=(1<<ADSC);
+		delay(650);
 		//Проверка на наличие света
-		//light = (ADCH < 0x03)?true:false;
+		light = (ADCH < 0x03)?true:false;
 		
-		//if( light ){
-			LED1_ON;
-			
+		if( light ){
+			LED1_ON;	
 		//}else{
 		//	LED1_OFF;
-		//}
+		}
 		
 		delay(65000);
 		
-		if( i++ == 25 ){
+		if( i++ == 50 ){
 			i = 0;
 			LED1_OFF;
 			sleep();
