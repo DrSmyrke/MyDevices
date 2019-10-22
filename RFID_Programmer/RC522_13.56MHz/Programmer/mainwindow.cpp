@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QFile>
 #include <QDir>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -23,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	//TODO: переделать
 	ui->blockDataBox->setInputMask(">HH HH HH HH HH HH HH HH HH HH HH HH HH HH HH HH;_");
+	ui->uidBox->setInputMask(">HH HH HH HH;_");
 }
 
 MainWindow::~MainWindow()
@@ -38,6 +40,8 @@ void MainWindow::slot_serialPortReadData()
 		QByteArray data = m_pSerialPort->read(1);
 		m_buff.append(data);
 	}
+
+	qDebug()<<m_buff;
 
 	chkPkt(m_buff);
 }
@@ -63,8 +67,10 @@ void MainWindow::reScanComPorts()
 	ui->portSelector->clear();
 	QStringList devs;
 	#if defined(Q_OS_WIN)
-		//m_path.replace("file:///","");
-		return;
+		for( uint8_t i = 1; i < 250; i++ ){
+			auto str = QString("COM%1").arg( i );
+			if( checkPort( str ) ) ui->portSelector->addItem( str );
+		}
 	#elif defined(Q_OS_UNIX)
 		QDir dir=QDir("/dev");
 		devs=dir.entryList(QStringList() << "ttyUSB*",QDir::NoDotAndDotDot | QDir::System);
@@ -90,22 +96,22 @@ void MainWindow::statusUpd()
 void MainWindow::chkPkt(QByteArray &buff)
 {
 	if( buff.size() < 5 ) return;
-	if( buff[0] != START_BYTE ) return;
+	if( static_cast<uint8_t>( buff.at(0) ) != START_BYTE ) return;
 
-	m_recvPkt.cmd = buff[1];
-	m_recvPkt.len = buff[2];
+	m_recvPkt.cmd = static_cast<uint8_t>( buff[1] );
+	m_recvPkt.len = static_cast<uint8_t>( buff[2] );
 
 	if( buff.size() < 5 + m_recvPkt.len ) return;
 
 	uint8_t i = 3;
 	uint8_t crc = 0;
 	for(i = 3; i < m_recvPkt.len + 3; i++){
-		m_recvPkt.data[i-3] = buff[i];
+		m_recvPkt.data[i-3] = static_cast<uint8_t>( buff[i] );
 		crc += m_recvPkt.data[i-3];
 	}
 
-	m_recvPkt.crc = buff[i];
-	if( buff[++i] != STOP_BYTE ) return;
+	m_recvPkt.crc = static_cast<uint8_t>( buff[i] );
+	if( static_cast<uint8_t>( buff.at(++i) ) != STOP_BYTE ) return;
 
 	crc += m_recvPkt.cmd;
 	crc += m_recvPkt.len;
@@ -143,8 +149,8 @@ void MainWindow::processingPkt()
 		case CMD_READ_UID:
 			if(m_recvPkt.len > 0){
 				miniBuff.clear();
-				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( m_recvPkt.data[i] );
-				ui->uidLabel->setText( printHex( miniBuff.toHex().toUpper() ) );
+				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( static_cast< char >( m_recvPkt.data[i] ) );
+				ui->uidBox->setText( miniBuff.toHex() );
 			}else{
 				//TODO: реализовать отправку ошибки для повторной отправки пакета
 			}
@@ -177,7 +183,7 @@ void MainWindow::processingPkt()
 		case CMD_READ_BLOCK:
 			if(m_recvPkt.len > 0){
 				miniBuff.clear();
-				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( m_recvPkt.data[i] );
+				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( static_cast< char >( m_recvPkt.data[i] ) );
 				ui->blockDataBox->setText( miniBuff.toHex() );
 			}else{
 				//TODO: реализовать отправку ошибки для повторной отправки пакета
@@ -186,7 +192,7 @@ void MainWindow::processingPkt()
 		case CMD_ERROR:
 			if(m_recvPkt.len > 0){
 				miniBuff.clear();
-				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( m_recvPkt.data[i] );
+				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( static_cast< char >( m_recvPkt.data[i] ) );
 				ui->statusLabel_2->setText("<span style=\"color:red\"><b>" + QString(miniBuff) + "</b></span>");
 			}else{
 				//TODO: реализовать отправку ошибки для повторной отправки пакета
@@ -195,7 +201,7 @@ void MainWindow::processingPkt()
 		case CMD_SUCCESS:
 			if(m_recvPkt.len > 0){
 				miniBuff.clear();
-				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( m_recvPkt.data[i] );
+				for(uint8_t i = 0; i < m_recvPkt.len; i++) miniBuff.append( static_cast< char >( m_recvPkt.data[i] ) );
 				ui->statusLabel_2->setText("<span style=\"color:green\"><b>" + QString(miniBuff) + "</b></span>");
 			}else{
 				//TODO: реализовать отправку ошибки для повторной отправки пакета
@@ -205,7 +211,7 @@ void MainWindow::processingPkt()
 			if(m_recvPkt.len > 0){
 				ui->tabWidget->setCurrentIndex(1);
 				miniBuff.clear();
-				for(uint8_t i = 0; i < m_recvPkt.len - 1; i++) miniBuff.append( m_recvPkt.data[i] );
+				for(uint8_t i = 0; i < m_recvPkt.len - 1; i++) miniBuff.append( static_cast< char >( m_recvPkt.data[i] ) );
 				if( m_recvPkt.len > 17 ){
 					ui->dumpDataBox->append( "# " + QString::number( m_recvPkt.data[m_recvPkt.len - 1] ) + "	" + miniBuff );
 				}else{
@@ -230,6 +236,22 @@ QString MainWindow::printHex(const QString &data)
 	return str;
 }
 
+bool MainWindow::checkPort(const QString &port)
+{
+	bool res = false;
+
+	if( m_pSerialPort->isOpen() ) m_pSerialPort->close();
+
+	m_pSerialPort->setPortName( port );
+
+	if( m_pSerialPort->open( QIODevice::ReadOnly ) ){
+		m_pSerialPort->close();
+		res = true;
+	}
+
+	return res;
+}
+
 void MainWindow::on_connectB_clicked()
 {
 	if(m_pSerialPort->isOpen()){
@@ -243,7 +265,7 @@ void MainWindow::on_connectB_clicked()
 		m_pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
 		m_pSerialPort->open(QIODevice::ReadWrite);
 
-		QTimer::singleShot(3000,this,[this](){ sendPkt(CMD_READ_VERSION,""); });
+		QTimer::singleShot(5000,this,[this](){ sendPkt(CMD_READ_VERSION,""); });
 	}
 	statusUpd();
 }
@@ -251,7 +273,6 @@ void MainWindow::on_connectB_clicked()
 void MainWindow::on_updB_clicked()
 {
 	ui->typeLabel->setText(tr("Updating..."));
-	ui->uidLabel->setText(tr("Updating..."));
 	sendPkt(CMD_READ_UID_AND_TYPE,"");
 }
 
@@ -262,22 +283,22 @@ void MainWindow::sendPkt(const uint8_t cmd, const QByteArray &data)
 	ui->statusLabel_2->clear();
 	clearSendPktData();
 	m_sendPkt.cmd = cmd;
-	m_sendPkt.len = data.size();
+	m_sendPkt.len = static_cast< uint8_t >( data.size() );
 	m_sendPkt.crc = m_sendPkt.cmd + m_sendPkt.len;
 
 	QByteArray ba;
-	ba.append(START_BYTE);
-	ba.append(m_sendPkt.cmd);
-	ba.append(m_sendPkt.len);
+	ba.append( static_cast< char >( START_BYTE ) );
+	ba.append( static_cast< char >( m_sendPkt.cmd ) );
+	ba.append( static_cast< char >( m_sendPkt.len ) );
 
 	for(uint8_t i = 0; i < m_sendPkt.len; i++){
-		m_sendPkt.data[i] = data.at(i);
+		m_sendPkt.data[i] = static_cast< uint8_t >( data.at(i) );
 		m_sendPkt.crc += m_sendPkt.data[i];
-		ba.append(m_sendPkt.data[i]);
+		ba.append( static_cast< char >( m_sendPkt.data[i] ) );
 	}
-	ba.append(m_sendPkt.crc);
+	ba.append( static_cast< char >( m_sendPkt.crc ) );
 
-	ba.append(STOP_BYTE);
+	ba.append( static_cast< char >( STOP_BYTE ) );
 
 	ui->logBox->append("SND >: <span style=\"color:gray\">" + printHex(ba.toHex()) +"</span><br>" );
 	m_pSerialPort->write(ba);
@@ -287,7 +308,7 @@ void MainWindow::sendPkt(const uint8_t cmd, const QByteArray &data)
 void MainWindow::on_setAddrB_clicked()
 {
 	QByteArray ba;
-	ba.append(ui->blockAddrBox->value());
+	ba.append( ui->blockAddrBox->value() );
 	sendPkt(CMD_SET_ADDRESS,ba);
 }
 
@@ -301,4 +322,11 @@ void MainWindow::on_writeB_clicked()
 	QByteArray ba;
 	for(QString elem:ui->blockDataBox->text().split(" ")) ba.append( elem.toUInt(nullptr,16) );
 	sendPkt(CMD_WRITE_BLOCK,ba);
+}
+
+void MainWindow::on_setUID_clicked()
+{
+	QByteArray ba;
+	for(QString elem:ui->uidBox->text().split(" ")) ba.append( elem.toUInt(nullptr,16) );
+	sendPkt(CMD_WRITE_UID,ba);
 }

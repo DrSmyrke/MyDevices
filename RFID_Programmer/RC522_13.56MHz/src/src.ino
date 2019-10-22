@@ -87,6 +87,15 @@ void loop() {
       break;
       case CMD_READ_PICC_TYPE: readType(); break;
       case CMD_WRITE_UID:
+        if ( mfrc522.MIFARE_SetUid(recvPkt.data, (byte)4, true) ) {
+          sprintf( strBuff, "MIFARE_Write NEW UID completed\n" );
+          MyProto_send(CMD_SUCCESS,strBuff,resp);
+        }else{
+          sprintf( strBuff, "MIFARE_Write NEW UID failed!\n" );
+          MyProto_send(CMD_ERROR,strBuff,resp);
+        }
+        mfrc522.PICC_HaltA();
+        if ( ! mfrc522.PICC_IsNewCardPresent() || ! mfrc522.PICC_ReadCardSerial() ) break;
         /*
         Serial.println(">: Processing CMD_WRITE_UID");
         if ( mfrc522.MIFARE_SetUid(recvPkt.data, (byte)recvPkt.len, true) ) Serial.println(F("Wrote new UID to card."));

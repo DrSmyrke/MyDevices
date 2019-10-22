@@ -27,6 +27,8 @@ private slots:
 	void on_writeB_clicked();
 	void on_dumpB_clicked() { sendPkt(CMD_DUMP_DATA,""); }
 
+	void on_setUID_clicked();
+
 private:
 	Ui::MainWindow *ui;
 	QSerialPort* m_pSerialPort;
@@ -42,6 +44,7 @@ private:
 	void chkPkt(QByteArray &buff);
 	void processingPkt();
 	QString printHex(const QString &data);
+	bool checkPort(const QString &port);
 };
 
 #endif // MAINWINDOW_H
