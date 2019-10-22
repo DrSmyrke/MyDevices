@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include <QFile>
 #include <QDir>
-#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -22,7 +21,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	statusUpd();
 	reScanComPorts();
 
-	//TODO: переделать
 	ui->blockDataBox->setInputMask(">HH HH HH HH HH HH HH HH HH HH HH HH HH HH HH HH;_");
 	ui->uidBox->setInputMask(">HH HH HH HH;_");
 }
@@ -41,8 +39,6 @@ void MainWindow::slot_serialPortReadData()
 		m_buff.append(data);
 	}
 
-	qDebug()<<m_buff;
-
 	chkPkt(m_buff);
 }
 
@@ -51,15 +47,6 @@ void MainWindow::slot_timer()
 	if(m_pSerialPort->bytesAvailable()) slot_serialPortReadData();
 
 	if( !m_recvPkt.forProcessing && m_buff.size() > 0 ) chkPkt(m_buff);
-
-	/*
-	if(m_buff.size() > 0){
-		//ui->logBox->insertPlainText( printHex( m_buff.toHex() ) );
-		ui->logBox->insertPlainText( m_buff );
-		//ui->logBox->append("RCV <: " + m_buff );//+ " [" + printHex(m_buff.toHex()) + "]");
-		m_buff.clear();
-	}
-	*/
 }
 
 void MainWindow::reScanComPorts()

@@ -2,3 +2,8 @@
 *.bin
 *.user
 *.user.*
+*.qmake.*
+Makefile
+Makefile.*
+bin
+build

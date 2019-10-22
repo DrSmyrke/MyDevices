@@ -95,5 +95,9 @@
         <source>Updating...</source>
         <translation>Обновление...</translation>
     </message>
+    <message>
+        <source>Set UID</source>
+        <translation>Установить UID</translation>
+    </message>
 </context>
 </TS>

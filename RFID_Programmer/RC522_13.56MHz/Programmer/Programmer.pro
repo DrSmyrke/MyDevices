@@ -11,7 +11,16 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Programmer
 TEMPLATE = app
 
+CONFIG += c++11
+
+OBJECTS_DIR         = ../build
+MOC_DIR             = ../build
+RCC_DIR             = ../build
+UI_DIR				= ../build
+DESTDIR             = ../bin
+
 QMAKE_CXXFLAGS += "-std=c++11"
+
 win32|win64{
     RC_FILE=  index.rc
     OTHER_FILES+= index.rc

@@ -88,10 +88,10 @@ void loop() {
       case CMD_READ_PICC_TYPE: readType(); break;
       case CMD_WRITE_UID:
         if ( mfrc522.MIFARE_SetUid(recvPkt.data, (byte)4, true) ) {
-          sprintf( strBuff, "MIFARE_Write NEW UID completed\n" );
+          resp = sprintf( strBuff, "MIFARE_Write UID completed\n" );
           MyProto_send(CMD_SUCCESS,strBuff,resp);
         }else{
-          sprintf( strBuff, "MIFARE_Write NEW UID failed!\n" );
+          resp = sprintf( strBuff, "MIFARE_Write UID failed!\n" );
           MyProto_send(CMD_ERROR,strBuff,resp);
         }
         mfrc522.PICC_HaltA();
@@ -132,11 +132,17 @@ void readVersion()
   uint8_t MiniBuff[1];
   MiniBuff[0] = (uint8_t) mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
   MyProto_send(CMD_READ_VERSION, MiniBuff, 1);
+  delay(100);
+  resp = sprintf( strBuff, "MIFARE_Read OK\n" );
+  MyProto_send(CMD_SUCCESS,strBuff,resp);
 }
 
 void readUID()
 {
   MyProto_send(CMD_READ_UID, mfrc522.uid.uidByte, mfrc522.uid.size);
+  delay(100);
+  resp = sprintf( strBuff, "MIFARE_Read OK\n" );
+  MyProto_send(CMD_SUCCESS,strBuff,resp);
 }
 
 void readType()
@@ -152,6 +158,9 @@ void setAddress()
   uint8_t MiniBuff[1];
   MiniBuff[0] = blockAddr;
   MyProto_send(CMD_SET_ADDRESS, MiniBuff, 1);
+  delay(100);
+  resp = sprintf( strBuff, "MIFARE_Set address OK\n" );
+  MyProto_send(CMD_SUCCESS,strBuff,resp);
 }
 
 void dumpData()
