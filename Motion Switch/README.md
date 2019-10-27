@@ -5,7 +5,7 @@ Universal device for smart home with motion sensor
 ![Sample image](V2/img/pcb.jpg)
 
 ### Shematic V2
-![Sample image](V2/img/shematic.jpg)
+![Sample image](V2/img/Schematic.JPG)
 
 ### PCB Layout V1
 ![Sample image](V1/img/pcb.jpg)
