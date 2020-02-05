@@ -253,22 +253,6 @@ QString MainWindow::printHex(const QString &data)
 	return str;
 }
 
-bool MainWindow::checkPort(const QString &port)
-{
-	bool res = false;
-
-	if( m_pSerialPort->isOpen() ) m_pSerialPort->close();
-
-	m_pSerialPort->setPortName( port );
-
-	if( m_pSerialPort->open( QIODevice::ReadOnly ) ){
-		m_pSerialPort->close();
-		res = true;
-	}
-
-	return res;
-}
-
 void MainWindow::on_connectB_clicked()
 {
 	if(m_pSerialPort->isOpen()){

@@ -44,7 +44,6 @@ private:
 	void chkPkt(QByteArray &buff);
 	void processingPkt();
 	QString printHex(const QString &data);
-	bool checkPort(const QString &port);
 };
 
 #endif // MAINWINDOW_H
