@@ -15,11 +15,26 @@ byte buff[18];
 byte sz = sizeof(buff);
 byte strBuff[32];
 
+// Number of known default keys (hard-coded)
+// NOTE: Synchronize the NR_KNOWN_KEYS define with the defaultKeys[] array
+#define NR_KNOWN_KEYS   8
+// Known keys, see: https://code.google.com/p/mfcuk/wiki/MifareClassicDefaultKeys
+byte knownKeys[NR_KNOWN_KEYS][MFRC522::MF_KEY_SIZE] =  {
+    {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // FF FF FF FF FF FF = factory default
+    {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // A0 A1 A2 A3 A4 A5
+    {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5}, // B0 B1 B2 B3 B4 B5
+    {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd}, // 4D 3A 99 C3 51 DD
+    {0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a}, // 1A 98 2C 7E 45 9A
+    {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // D3 F7 D3 F7 D3 F7
+    {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}, // AA BB CC DD EE FF
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}  // 00 00 00 00 00 00
+};
+
 void setup() {
 	Serial.begin(9600);   // Initialize serial communications with the PC
 	while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
 	SPI.begin();      // Init SPI bus
-	mfrc522.PCD_Init();   // Init MFRC522
+	mfrc522.PCD_Init(); // Init MFRC522
 	myInit();
   for (byte i = 0; i < MFRC522::MF_KEY_SIZE; ++i) key.keyByte[i] = 0xFF;
   GREEN_LED_ON;
@@ -64,7 +79,7 @@ void loop() {
       case CMD_READ_UID: readUID(); break;
       case CMD_READ_BLOCK:
         readType();
-        resp = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, blockAddr, &key, &(mfrc522.uid));
+        resp = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_B, blockAddr, &key, &(mfrc522.uid));
         if ( resp == MFRC522::STATUS_OK ) {
           resp = mfrc522.MIFARE_Read(blockAddr, buff, &sz);
           if ( resp == MFRC522::STATUS_OK ) {
@@ -87,6 +102,7 @@ void loop() {
       break;
       case CMD_READ_PICC_TYPE: readType(); break;
       case CMD_WRITE_UID:
+		mfrc522.MIFARE_UnbrickUidSector(false);
         if ( mfrc522.MIFARE_SetUid(recvPkt.data, (byte)4, true) ) {
           resp = sprintf( strBuff, "MIFARE_Write UID completed\n" );
           MyProto_send(CMD_SUCCESS,strBuff,resp);
@@ -95,7 +111,10 @@ void loop() {
           MyProto_send(CMD_ERROR,strBuff,resp);
         }
         mfrc522.PICC_HaltA();
-        if ( ! mfrc522.PICC_IsNewCardPresent() || ! mfrc522.PICC_ReadCardSerial() ) break;
+        if ( ! mfrc522.PICC_IsNewCardPresent() || ! mfrc522.PICC_ReadCardSerial() ){
+			//mfrc522.PCD_Init();
+			break;
+		}
         /*
         Serial.println(">: Processing CMD_WRITE_UID");
         if ( mfrc522.MIFARE_SetUid(recvPkt.data, (byte)recvPkt.len, true) ) Serial.println(F("Wrote new UID to card."));
@@ -150,6 +169,22 @@ void readType()
   uint8_t MiniBuff[1];
   MiniBuff[0] = (uint8_t) mfrc522.PICC_GetType(mfrc522.uid.sak);
   MyProto_send(CMD_READ_PICC_TYPE, MiniBuff, 1);
+  /*
+  // Try the known default keys
+  MFRC522::MIFARE_Key key;
+  for (byte k = 0; k < NR_KNOWN_KEYS; k++) {
+      // Copy the known key into the MIFARE_Key structure
+      for (byte i = 0; i < MFRC522::MF_KEY_SIZE; i++) {
+          key.keyByte[i] = knownKeys[k][i];
+      }
+      // Try the key
+      if (try_key(&key)) {
+          // Found and reported on the key and block,
+          // no need to try other keys for this PICC
+          break;
+      }
+  }
+  */
 }
 
 void setAddress()

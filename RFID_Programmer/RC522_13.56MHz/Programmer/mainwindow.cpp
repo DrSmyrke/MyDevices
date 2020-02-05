@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QFile>
 #include <QDir>
+#include <QSerialPortInfo>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -39,7 +40,29 @@ void MainWindow::slot_serialPortReadData()
 		m_buff.append(data);
 	}
 
-	chkPkt(m_buff);
+	if(static_cast<uint8_t>( m_buff.at(0) ) != START_BYTE ){
+		QByteArray buff;
+		while( m_buff.contains( '\r' ) ){
+			auto sym = m_buff.left( 1 );
+			m_buff.remove( 0, 1 );
+
+			if( sym.at( 0 ) == '\n' ) continue;
+			if( sym.at( 0 ) == '\r' ){
+				ui->logBox->insertPlainText( QString( buff ) );
+				buff.clear();
+				continue;
+			}
+			buff.append( sym );
+		}
+
+		auto sym = m_buff.left( 1 );
+		if( sym.at( 0 ) == '\n' ){
+			m_buff.remove( 0, 1 );
+		}
+	}
+
+
+	while( m_buff.size() > 4 ) chkPkt(m_buff);
 }
 
 void MainWindow::slot_timer()
@@ -52,19 +75,23 @@ void MainWindow::slot_timer()
 void MainWindow::reScanComPorts()
 {
 	ui->portSelector->clear();
-	QStringList devs;
-	#if defined(Q_OS_WIN)
-		for( uint8_t i = 1; i < 250; i++ ){
-			auto str = QString("COM%1").arg( i );
-			if( checkPort( str ) ) ui->portSelector->addItem( str );
-		}
-	#elif defined(Q_OS_UNIX)
-		QDir dir=QDir("/dev");
-		devs=dir.entryList(QStringList() << "ttyUSB*",QDir::NoDotAndDotDot | QDir::System);
-		ui->portSelector->addItems(devs);
-		devs=dir.entryList(QStringList() << "ttyACM*",QDir::NoDotAndDotDot | QDir::System);
-		ui->portSelector->addItems(devs);
-	#endif
+	for( auto portInfo:QSerialPortInfo::availablePorts() ){
+		ui->portSelector->addItem( portInfo.portName() );
+	}
+//	ui->portSelector->clear();
+//	QStringList devs;
+//	#if defined(Q_OS_WIN)
+//		for( uint8_t i = 1; i < 250; i++ ){
+//			auto str = QString("COM%1").arg( i );
+//			if( checkPort( str ) ) ui->portSelector->addItem( str );
+//		}
+//	#elif defined(Q_OS_UNIX)
+//		QDir dir=QDir("/dev");
+//		devs=dir.entryList(QStringList() << "ttyUSB*",QDir::NoDotAndDotDot | QDir::System);
+//		ui->portSelector->addItems(devs);
+//		devs=dir.entryList(QStringList() << "ttyACM*",QDir::NoDotAndDotDot | QDir::System);
+//		ui->portSelector->addItems(devs);
+//	#endif
 }
 
 void MainWindow::statusUpd()
@@ -83,7 +110,10 @@ void MainWindow::statusUpd()
 void MainWindow::chkPkt(QByteArray &buff)
 {
 	if( buff.size() < 5 ) return;
-	if( static_cast<uint8_t>( buff.at(0) ) != START_BYTE ) return;
+	if( static_cast<uint8_t>( buff.at(0) ) != START_BYTE ){
+		buff.remove( 0, 1 );
+		return;
+	}
 
 	m_recvPkt.cmd = static_cast<uint8_t>( buff[1] );
 	m_recvPkt.len = static_cast<uint8_t>( buff[2] );
@@ -252,7 +282,7 @@ void MainWindow::on_connectB_clicked()
 		m_pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
 		m_pSerialPort->open(QIODevice::ReadWrite);
 
-		QTimer::singleShot(5000,this,[this](){ sendPkt(CMD_READ_VERSION,""); });
+		QTimer::singleShot(3000,this,[this](){ sendPkt(CMD_READ_VERSION,""); });
 	}
 	statusUpd();
 }
@@ -287,9 +317,9 @@ void MainWindow::sendPkt(const uint8_t cmd, const QByteArray &data)
 
 	ba.append( static_cast< char >( STOP_BYTE ) );
 
-	ui->logBox->append("SND >: <span style=\"color:gray\">" + printHex(ba.toHex()) +"</span><br>" );
 	m_pSerialPort->write(ba);
-	m_pSerialPort->waitForBytesWritten(3000);
+	m_pSerialPort->waitForBytesWritten(300);
+	ui->logBox->append("SND >: <span style=\"color:gray\">" + printHex(ba.toHex()) +"</span><br>" );
 }
 
 void MainWindow::on_setAddrB_clicked()
