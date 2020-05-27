@@ -406,3 +406,10 @@ void play( const uint8_t* melody, const uint16_t size )
 	uint8_t tempo = pgm_read_word(&(melody[0]));
 	for( i = 1; i < size; i+=2 ) playNote( pgm_read_word(&(melody[i])), pgm_read_word(&(melody[i+1])) );
 }
+
+void sounder_init()
+{
+	pinModePB( 1, OUTPUT );
+	setFreq( 0 );
+	TCCR0 = (1<<CS02);
+}
