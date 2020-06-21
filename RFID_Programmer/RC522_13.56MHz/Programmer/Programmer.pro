@@ -8,6 +8,9 @@ QT       += core gui serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+#uncomment from static build
+#QMAKE_LFLAGS_RELEASE += -static -static-libgcc
+
 TARGET = Programmer
 TEMPLATE = app
 
