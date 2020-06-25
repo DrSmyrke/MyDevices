@@ -5,16 +5,16 @@
 #define LED1_OFF				setPlus(PORTB,1)
 #define LED1_TOGGLE				ibi(PORTB,1)
 
+#define SLEEP_SEC_INIT			45
+
 #include "main.h"
 #include "Atmega8T0.h"
 #include "sleep.h"
 #include "INT0.h"
-#include "comparator.h"
 #include "adc.h"
 //***************************************************************************
 // Установки
-uint8_t light = false;
-uint8_t ch = 0;
+uint8_t sleepSec = SLEEP_SEC_INIT;
 //***************************************************************************
 // Инициализация
 void init(void)
@@ -23,6 +23,10 @@ void init(void)
 }
 
 //***************************************************************************
+void int0_interrupt(void)
+{
+	sleepSec += 15;
+}
 //Функция вызыается 10 раз в секунду или каждые 100мс
 void ms100(void)
 {
@@ -32,42 +36,36 @@ void ms100(void)
 //Функция вызыается раз в секунду
 void second(void)
 {
-	if(batF) LED1_TOGGLE;
+	if( sleepSec ) sleepSec--;
 }
 
 int main(void)
 {
 	init();
-	//t0_init();
+	t0_init();
 	int0_init();
 	sleep_init();
-	//comparator_init();
 	adc_init();
 	sei();
 	
 	sleep_enable();
 	
-	uint8_t i = 0;
+	while(1){		
 	
-	while(1){
-		//Запускаем ADC
-		ADCSRA |=(1<<ADSC);
-		delay(650);
-		//Проверка на наличие света
-		light = (ADCH < 0x03)?true:false;
-		
-		if( light ){
-			LED1_ON;	
-		//}else{
-		//	LED1_OFF;
+		if( !adc_isLight() ){
+			sleepSec = SLEEP_SEC;
+			LED1_ON;
+		}else{
+			sleepSec = 0;
+			LED1_OFF;
 		}
 		
-		delay(65000);
-		
-		if( i++ == 50 ){
-			i = 0;
+		if( !sleepSec ){
 			LED1_OFF;
 			sleep();
+			adc_run();
 		}
+		
+		delay(650);
 	}
 }
