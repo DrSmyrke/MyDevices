@@ -26,3 +26,4 @@ uint8_t read_eeprom_bits(uint32_t address, uint8_t bitnum){
 	tmp=0;for(i=0;i<bitnum;i++){if(eeprom_read(address+i)==0){tmp &= ~(1<<i);}else{tmp |= 1<<i;}}
 	return tmp;
 }
+
