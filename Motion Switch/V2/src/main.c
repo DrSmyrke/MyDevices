@@ -50,10 +50,12 @@ int main(void)
 	
 	sleep_enable();
 	
-	while(1){		
+	while(1){
+
+		adc_run();
 	
 		if( !adc_isLight() ){
-			sleepSec = SLEEP_SEC;
+			sleepSec = SLEEP_SEC_INIT;
 			LED1_ON;
 		}else{
 			sleepSec = 0;
@@ -63,7 +65,6 @@ int main(void)
 		if( !sleepSec ){
 			LED1_OFF;
 			sleep();
-			adc_run();
 		}
 		
 		delay(650);

@@ -13,10 +13,12 @@ void adc_run()
 {
 	//Запускаем ADC
 	ADCSRA |=(1<<ADSC);
+	//Ждем окончания преобразования
+	while((ADCSRA & (1<<ADSC)));
 }
 
 uint8_t adc_isLight()
 {
 	//Проверка на наличие света
-	return ( ADCH > 0x00 ) ? 0x01 : 0x00;
+	return ( ADC > 750 ) ? 0x01 : 0x00;
 }
