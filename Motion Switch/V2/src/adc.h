@@ -20,5 +20,5 @@ void adc_run()
 uint8_t adc_isLight()
 {
 	//Проверка на наличие света
-	return ( ADC > 750 ) ? 0x01 : 0x00;
+	return ( ADC > 230 ) ? 0x01 : 0x00;
 }

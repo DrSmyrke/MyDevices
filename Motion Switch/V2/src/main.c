@@ -5,7 +5,7 @@
 #define LED1_OFF				setPlus(PORTB,1)
 #define LED1_TOGGLE				ibi(PORTB,1)
 
-#define SLEEP_SEC_INIT			45
+#define SLEEP_SEC_INIT			3
 
 #include "main.h"
 #include "Atmega8T0.h"
@@ -25,7 +25,7 @@ void init(void)
 //***************************************************************************
 void int0_interrupt(void)
 {
-	sleepSec += 15;
+	sleepSec += 10;
 }
 //Функция вызыается 10 раз в секунду или каждые 100мс
 void ms100(void)
@@ -46,27 +46,24 @@ int main(void)
 	int0_init();
 	sleep_init();
 	adc_init();
-	sei();
-	
 	sleep_enable();
+	sei();
 	
 	while(1){
 
 		adc_run();
 	
 		if( !adc_isLight() ){
-			sleepSec = SLEEP_SEC_INIT;
 			LED1_ON;
 		}else{
 			sleepSec = 0;
-			LED1_OFF;
 		}
 		
 		if( !sleepSec ){
 			LED1_OFF;
+			t0_reset();
 			sleep();
+			sleepSec += 75;
 		}
-		
-		delay(650);
 	}
 }
