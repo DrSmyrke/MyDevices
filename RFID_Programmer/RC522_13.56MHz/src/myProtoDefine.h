@@ -1,6 +1,5 @@
-#include <stdint.h>
-#define FALSE 0
-#define TRUE 1
+#define FALSE	0x00
+#define TRUE	0x01
 
 enum{
   START_BYTE = 0xA1,
