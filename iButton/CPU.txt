@@ -1,1 +1,0 @@
-Atmega8 8MHz
