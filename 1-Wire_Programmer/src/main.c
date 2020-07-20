@@ -132,7 +132,7 @@ int main(void)
 		if( uart_isReadAvailable() ){
 			len = uart_readData( buff );
 			if( len ){
-				myproto_setRXData( buff, &len );
+				myproto_setRXData( buff, len );
 			}
 			//uart_send_buff( buff, len );
 			//uart_send( 0xff );
