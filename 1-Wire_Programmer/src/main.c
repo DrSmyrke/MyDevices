@@ -1,17 +1,20 @@
 #define F_CPU 8000000UL
 
-#define APP_VERSION				1
+#define APP_VERSION					1
 
 #define MYPROTO_SEND_MY_USART_LIB
+#define MYPROTO_PROCESS_FUNCTION	myproto_processCommand()
 
-#define LED2_PIN_NUM			3
-#define LED2_PORT				PORTD
-#define LED2_PIN				PIND
-#define LED2_INIT				pinModePD(LED2_PIN_NUM,OUTPUT)
-#define LED2_READ				CheckBit(LED2_PIN,LED2_PIN_NUM)
-#define LED2_ON					setZero(LED2_PORT,LED2_PIN_NUM)
-#define LED2_OFF				setPlus(LED2_PORT,LED2_PIN_NUM)
-#define LED2_TOGGLE				ibi(LED2_PORT,LED2_PIN_NUM)
+#define LED2_PIN_NUM				3
+#define LED2_PORT					PORTD
+#define LED2_PIN					PIND
+#define LED2_INIT					pinModePD(LED2_PIN_NUM,OUTPUT)
+#define LED2_READ					CheckBit(LED2_PIN,LED2_PIN_NUM)
+#define LED2_ON						setZero(LED2_PORT,LED2_PIN_NUM)
+#define LED2_OFF					setPlus(LED2_PORT,LED2_PIN_NUM)
+#define LED2_TOGGLE					ibi(LED2_PORT,LED2_PIN_NUM)
+
+unsigned char myproto_processCommand(void);
 
 #include "gitbuild.h"
 #include "main.h"
@@ -32,7 +35,7 @@ inline void init(void)
 	LED2_OFF;
 }
 
-void myproto_processCommand(void)
+unsigned char myproto_processCommand(void)
 {
 	uint8_t i, temp;
 	
@@ -103,6 +106,8 @@ void myproto_processCommand(void)
 			}
 		break;
 	}
+	
+	return 1;
 }
 
 int main(void)
