@@ -1,0 +1,14 @@
+#!/bin/bash
+
+wget --no-cache https://raw.githubusercontent.com/DrSmyrke/AVR-Libs/master/uart.h
+wget --no-cache https://raw.githubusercontent.com/DrSmyrke/AVR-Libs/master/myDevicesTypes.h
+wget --no-cache https://raw.githubusercontent.com/DrSmyrke/AVR-Libs/master/myProto.h
+wget --no-cache https://raw.githubusercontent.com/DrSmyrke/AVR-Libs/master/main.h
+wget --no-cache https://raw.githubusercontent.com/DrSmyrke/AVR-Libs/master/onewire.h
+
+BUILD_NUM=$(git rev-list HEAD --count)
+echo "#define BUILD_NUM $BUILD_NUM"> gitbuild.h
+
+avr-gcc -mmcu=atmega8 -Os -o main.o main.c && avr-objcopy -O ihex main.o main.hex && rm main.o
+
+rm {myProto.h,uart.h,myDevicesTypes.h,main.h,gitbuild.h,onewire.h}
