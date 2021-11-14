@@ -1,10 +1,13 @@
 //------------------------------------------------------
 void httpHandleIndex(void)
 {
+	String latitude = String( gps.latitude, 5 );
+	String longitude = String( gps.longitude, 5 );
+	
 	String page = 
 	"<!DOCTYPE html><html lang=\"en\"><head lang=\"en\"><title>-= GPS =-</title></head><body>"
-	"<b>latitude:</b> " + String( gps.latitude ) + "°<br>"
-	"<b>longitude:</b> " + String( gps.longitude ) + "°<br>"
+	"<b>latitude:</b> " + latitude + "°<br>"
+	"<b>longitude:</b> " + longitude + "°<br>"
 	"<b>altitude:</b> " + String( gps.altitude ) + "m<br>"
 	"<b>time:</b> " + String( gps.Hours ) + ":" + String( gps.minutes ) + ":" + String( gps.seconds ) + " " +
 	String( gps.day ) + "." + String( gps.month ) + "." + String( gps.year ) + "<br>"
@@ -13,7 +16,8 @@ void httpHandleIndex(void)
 	"<b>speed:</b> " + String( gps.speed ) + "km/h<br>"
 	"<b>satellites:</b> " + String( gps.satellites[ GPS_ACTIVE ] ) + "/" + String( gps.satellites[ GPS_VISIBLE ] ) + "<br>"
 
-	//http://maps.yandex.ru/?ll=gps.longitude,gps.latitude&pt=gps.longitude,gps.latitude&l=map&z=18
+	"<a href=\"http://maps.yandex.ru/?ll=" + longitude + "," + latitude + "&pt=" + longitude + "," + latitude + "&l=map&z=18\" target=\"_blank\">MAP</a>"
+
 	"</body></html>"
 	;
 
@@ -25,11 +29,15 @@ void httpHandleData(void)
 {
 	String page = 
 	"{"
-	"\"latitude\":  \"" + String( gps.latitude ) + "\","
-	"\"longitude\":  \"" + String( gps.longitude ) + "\","
+	"\"latitude\":  \"" + String( gps.latitude, 5 ) + "\","
+	"\"longitude\":  \"" + String( gps.longitude, 5 ) + "\","
 	"\"altitude\":  \"" + String( gps.altitude ) + "\","
-	"\"time\":  \"" + String( gps.Hours ) + ":" + String( gps.minutes ) + ":" + String( gps.seconds ) + "\","
-	"\"date\":  \"" + String( gps.day ) + "." + String( gps.month ) + "." + String( gps.year ) + "\","
+	"\"hour\":  \"" + String( gps.Hours ) + "\","
+	"\"minutes\":  \"" + String( gps.minutes ) + "\","
+	"\"seconds\":  \"" + String( gps.seconds ) + "\","
+	"\"day\":  \"" + String( gps.day ) + "\","
+	"\"month\":  \"" + String( gps.month ) + "\","
+	"\"year\":  \"" + String( gps.year ) + "\","
 	"\"Unix\":  \"" + String( gps.Unix ) + "\","
 	"\"speed\":  \"" + String( gps.speed ) + "\","
 	"\"satellites\":  \"" + String( gps.satellites[ GPS_ACTIVE ] ) + "/" + String( gps.satellites[ GPS_VISIBLE ] ) + "\""
