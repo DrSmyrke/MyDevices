@@ -1,3 +1,8 @@
+#ifndef __TIMER_H__
+#define __TIMER_H__
+
+#include <ESP8266WiFi.h>
+
 os_timer_t myTimer;
 
 void timerCallback(void *pArg)
@@ -9,6 +14,10 @@ void timerCallback(void *pArg)
 	if( !WiFiConnectionState() ){
 		WiFi.reconnect();
 	}
+
+	if( !gps.errPos ){
+
+	}
 }
 
 void timer_init(void)
@@ -16,3 +25,5 @@ void timer_init(void)
 	os_timer_setfn(&myTimer, timerCallback, NULL);
 	os_timer_arm(&myTimer, 10000, true);
 }
+
+#endif // __TIMER_H__

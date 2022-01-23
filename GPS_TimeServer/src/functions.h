@@ -1,3 +1,6 @@
+#ifndef __FUNCTIONS_H__
+#define __FUNCTIONS_H__
+
 bool WiFiConnectionState(void)
 {
 	bool state = false;
@@ -17,3 +20,5 @@ void wifi_init(void)
 
 	delay( 100 );
 }
+
+#endif // __FUNCTIONS_H__

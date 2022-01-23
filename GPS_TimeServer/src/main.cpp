@@ -1,7 +1,10 @@
 //------------------------------------------------------
 #define DEV_NAME				"GPS_TIMESERVER"
-#define WIFI_NETWORK			""
-#define WIFI_NETWORK_KEY		""
+#define WIFI_NETWORK			"SECRETNET"
+#define WIFI_NETWORK_KEY		"##SSD3000##"
+#define DEFAULT_LOGIN			"admin"
+#define DEFAULT_PASS			"admin"
+#define UPDFILE					"main.bin"
 #define NTP_PORT				123
 #define NTP_BUFF_SIZE			50
 //------------------------------------------------------
@@ -12,8 +15,13 @@
 #include <WiFiUdp.h>
 #include <iarduino_GPS_NMEA.h>
 //------------------------------------------------------
-ESP8266WebServer webServer(80);
 iarduino_GPS_NMEA gps;
+//------------------------------------------------------
+#include "functions.h"
+#include "timer.h"
+#include "timer.h"
+//------------------------------------------------------
+ESP8266WebServer webServer(80);
 char* sa[] = { "NoName", "GPS", "Глонасс", "Galileo", "Beidou", "QZSS" };
 uint8_t ntp_packet[ NTP_BUFF_SIZE ];
 WiFiUDP UDP;
@@ -55,7 +63,8 @@ void setup()
 	
 	webServer.on("/", httpHandleIndex);
 	webServer.on("/data", httpHandleData);
-	//webServer.on("/index.css", httpHandleCssFile);
+	webServer.on("/config", httpHandleSettings);
+	webServer.on("/upload", HTTP_POST, [](){}, handleUpload);
 	webServer.onNotFound(httpHandleNotFound);
 	webServer.begin();
 	
@@ -73,9 +82,6 @@ void loop()
 	webServer.handleClient();
 
 	gps.read();
-	//if( gps.errPos ){
-
-	//}
 	
 	int packetSize = UDP.parsePacket();
 	if( packetSize ){

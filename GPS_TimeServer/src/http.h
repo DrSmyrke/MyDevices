@@ -1,4 +1,14 @@
 //------------------------------------------------------
+bool http_auth_check(void)
+{
+	if( !webServer.authenticate( DEFAULT_LOGIN, DEFAULT_PASS ) ){
+		webServer.requestAuthentication(DIGEST_AUTH, "DrSmyrke access", "authFail");
+		return false;
+	}
+	return true;
+}
+
+//------------------------------------------------------
 void httpHandleIndex(void)
 {
 	String latitude = String( gps.latitude, 5 );
@@ -47,6 +57,68 @@ void httpHandleData(void)
 	;
 
 	webServer.send(200, "application/json", page);
+}
+
+//------------------------------------------------------
+void httpHandleSettings(void)
+{
+	if( !http_auth_check() ) return;
+	
+	String page = "<form action=\"/upload\" method=\"POST\" enctype=\"multipart/form-data\"><center class=\"valfiol\">Upload assets</center><br><input type=\"file\" name=\"file\"> <input type=\"submit\" value=\"Upload\"></form>";
+
+	webServer.send(200, "text/html", page);
+}
+
+//------------------------------------------------------
+void handleUpload(void)
+{
+	if( !http_auth_check() ) return;
+
+	HTTPUpload& upload = webServer.upload();
+	String filename;
+	
+	switch( upload.status ){
+		case UPLOAD_FILE_START:
+			filename = upload.filename;
+			if(!filename.startsWith("/")) filename = "/"+filename;
+
+			// if( filename == CONFFILE ){
+			// 	conf.uploadType = upload_type_file;
+			// 	fsUploadFile = SPIFFS.open(CONFFILE, "w");
+			// }
+			if( upload.filename == UPDFILE ){
+				WiFiUDP::stopAll();
+				uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+				// conf.uploadType = upload_type_firmware;
+				Update.begin(maxSketchSpace);
+			}
+		break;
+		case UPLOAD_FILE_WRITE:
+			// if( conf.uploadType == upload_type_file && fsUploadFile ) fsUploadFile.write(upload.buf,upload.currentSize);
+			
+			//if( fsUploadFile) fsUploadFile.write(upload.buf,upload.currentSize);
+			//if(Update.write(upload.buf, upload.currentSize) != upload.currentSize)
+			if( upload.filename == UPDFILE ) Update.write(upload.buf, upload.currentSize);
+		break;
+		case UPLOAD_FILE_END:
+			// if( conf.uploadType == upload_type_file && fsUploadFile ){
+			// 	fsUploadFile.close();
+			// 	delay(500);
+			// 	webServer.sendHeader("Location","/config");
+			// 	webServer.send(303);
+			// }
+			if( upload.filename == UPDFILE ){
+				if( Update.end(true) ){
+					//webServer.sendHeader("Location","/config");
+					//webServer.send(303);
+					//delay(500);
+					ESP.restart();
+				}else{
+					webServer.send(500, "text/html", "Upload error" );
+				}
+			}
+		break;
+	}
 }
 
 //------------------------------------------------------
