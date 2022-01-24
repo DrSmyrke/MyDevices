@@ -88,11 +88,16 @@ RtcDateTime compiled = RtcDateTime( __DATE__, __TIME__ );
 
 //----------------------------------------------------
 static uint8_t second = 0;
-static uint8_t updateFlag = 0;
-static uint8_t validTimeFlag = 0;
+static uint8_t secondFlag = 0;
 static uint8_t rainbow = 0;
-static RtcDateTime now;
 static uint8_t txTDbuff[ 8 ];
+static bool pcMode = false;
+static uint8_t sec = 0;
+static uint8_t min = 0;
+static uint8_t hour = 0;
+static uint8_t day = 0;
+static uint8_t mon = 0;
+static uint16_t year = 0;
 //----------------------------------------------------
 
 
@@ -140,10 +145,6 @@ void setup()
 	if( now < compiled ){
 		Serial.println( "RTC is older than compile time!  (Updating DateTime)" );
 		Rtc.SetDateTime( compiled );
-	}else if( now > compiled ){
-		Serial.println( "RTC is newer than compile time. (this is expected)" );
-    }else if( now == compiled ){
-		Serial.println("RTC is the same as compile time! (not expected but all is fine)");
 	}
 #endif
 //	updateTime();
@@ -161,7 +162,7 @@ void clearStrip(){
 
 ISR(TIMER1_A)
 {
-	updateFlag = 1;
+	secondFlag = 1;
 	second++;
 }
 
@@ -310,55 +311,86 @@ void demo()
 	}
 }
 
+
+//----------------------------------------------------
+void updateDateTime(void)
+{
+#if defined( DS1307 )
+	btime_t bt;
+	time->loadFromRTC();
+	bt = time->getBTime();
+#elif defined( DS1302 )
+	RtcDateTime now = Rtc.GetDateTime();
+	if( !now.IsValid() ){
+		sec = 0;
+		min = 0;
+		hour = 0;
+		day = 0;
+		mon = 0;
+		year = 0;
+	}else{
+		sec = now.Second();
+		min = now.Minute();
+		hour = now.Hour();
+		day = now.Day();
+		mon = now.Month();
+		year = now.Year();
+	}
+#endif
+
+	txTDbuff[ 0 ] = 0xA1;
+	txTDbuff[ 1 ] = year >> 8;
+	txTDbuff[ 2 ] = year;
+	txTDbuff[ 3 ] = mon;
+	txTDbuff[ 4 ] = day;
+	txTDbuff[ 5 ] = hour;
+	txTDbuff[ 6 ] = min;
+	txTDbuff[ 7 ] = sec;
+}
+
+//----------------------------------------------------
 void loop()
 {
 	//demo();
 
-	if( updateFlag ){
-		updateFlag = 0;
+	// ---------- CheckIn computer connection for programming ----------------------
+	if( Serial.available() ){
+		uint8_t sym = Serial.read();
 
-
-
-
-
-		// ---------- CheckIn computer connection for programming ----------------------
-		if( Serial.available() == 1 ){
-			char sym = Serial.read();
-
-			if( sym == 0xF1 ){
-				Serial.write( 0x1F );
+		if( sym == 0xF1 ){
+			Serial.write( 0xCF );
+			pcMode = true;
+			strip.setBrightness( 5 );
+		}else if( sym == 0xAA ){
+			delay( 100 );
+			uint8_t i = 0;
+			while( Serial.available() && i < 7 ){
+				int byte = Serial.read();
+				if( byte == -1 ) break;
+				txTDbuff[ i++ ] = (uint8_t)byte;
 			}
-		}else if( Serial.available() == 9 ){
-			char sym = Serial.read();
-		}else{
+
+			if( i == 7 ){
+				year = ( ( txTDbuff[ 0 ] << 8 ) | ( txTDbuff[ 1 ] ) );
 #if defined( DS1307 )
-			btime_t bt;
-			time->loadFromRTC();
-			bt = time->getBTime();
 #elif defined( DS1302 )
-			now = Rtc.GetDateTime();
-			if( !now.IsValid() ){
-				txTDbuff[ 0 ] = 0xA1;
-				txTDbuff[ 1 ] = 0;
-				txTDbuff[ 2 ] = 0;
-				txTDbuff[ 3 ] = 0;
-				txTDbuff[ 4 ] = 0;
-				txTDbuff[ 5 ] = 0;
-				txTDbuff[ 6 ] = 0;
-				txTDbuff[ 7 ] = 0;
-			}else{
-				txTDbuff[ 0 ] = 0xA1;
-				txTDbuff[ 1 ] = now.Year() >> 8;
-				txTDbuff[ 2 ] = now.Year();
-				txTDbuff[ 3 ] = now.Month();
-				txTDbuff[ 4 ] = now.Day();
-				txTDbuff[ 5 ] = now.Hour();
-				txTDbuff[ 6 ] = now.Minute();
-				txTDbuff[ 7 ] = now.Second();
-			}
-
-			Serial.write( txTDbuff, sizeof( txTDbuff ) );
+			RtcDateTime dt( year, txTDbuff[ 2 ], txTDbuff[ 3 ], txTDbuff[ 4 ], txTDbuff[ 5 ], txTDbuff[ 6 ] );
+			Rtc.SetDateTime( dt );
 #endif
+			}
+		}
+	}
+
+
+
+
+	if( secondFlag ){
+		secondFlag = 0;
+		
+		updateDateTime();
+
+		if( pcMode ){
+			Serial.write( txTDbuff, sizeof( txTDbuff ) );
 		}
 		
 
@@ -366,29 +398,15 @@ void loop()
 
 
 
-		if( second++ >= 45 ){
+		if( second++ >= 15 ){
 			second = 0;
 
-#if defined( DS1307 )
-			btime_t bt;
-			time->loadFromRTC();
-			bt = time->getBTime();
-			//serialPrintTime( bt );
-
-			updatePixels( bt.hour, bt.min );
-#elif defined( DS1302 )
-			now = Rtc.GetDateTime();
-			//printDateTime( now );
-			if( !now.IsValid() ){
-				// Common Causes:
-				//    1) the battery on the device is low or even missing and the power line was disconnected
-				//Serial.println( "RTC lost confidence in the DateTime!" );
-				validTimeFlag = 0;
-			}else{
-				validTimeFlag = 1;
-				updatePixels( now.Hour(), now.Minute() );
+			if( pcMode ){
+				pcMode = false;
+				Serial.write( 0xAF );
 			}
-#endif
+			
+			updatePixels( hour, min );
 		}
 	}
 }
