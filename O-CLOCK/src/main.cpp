@@ -92,7 +92,6 @@ static uint8_t updateFlag = 0;
 static uint8_t validTimeFlag = 0;
 static uint8_t rainbow = 0;
 static RtcDateTime now;
-static bool programmFlag = false;
 static uint8_t txTDbuff[ 8 ];
 //----------------------------------------------------
 
@@ -151,23 +150,6 @@ void setup()
 	strip.begin();
 	strip.show();
 	strip.setBrightness( 10 );
-	
-
-
-// ---------- CheckIn computer connection for programming ----------------------
-	uint32_t counter = millis();
-	while( ( millis() - counter ) < 5000 ){
-		//
-		if( Serial.available() ){
-			char sym = Serial.read();
-
-			if( sym == 0xF1 ){
-				programmFlag = true;
-				Serial.write( 0x1F );
-				break;
-			}
-		}
-	}
 }
 
 void clearStrip(){
@@ -339,49 +321,44 @@ void loop()
 
 
 
+		// ---------- CheckIn computer connection for programming ----------------------
+		if( Serial.available() == 1 ){
+			char sym = Serial.read();
 
-		if( programmFlag ){
-
-			if( Serial.available() == 9 ){
-				char sym = Serial.read();
-
-				// if( sym == 0xF1 ){
-				// 	programmFlag = true;
-				// 	Serial.write( 0x1F );
-				// 	break;
-				// }
-			}else{
+			if( sym == 0xF1 ){
+				Serial.write( 0x1F );
+			}
+		}else if( Serial.available() == 9 ){
+			char sym = Serial.read();
+		}else{
 #if defined( DS1307 )
-				btime_t bt;
-				time->loadFromRTC();
-				bt = time->getBTime();
+			btime_t bt;
+			time->loadFromRTC();
+			bt = time->getBTime();
 #elif defined( DS1302 )
-				now = Rtc.GetDateTime();
-				if( !now.IsValid() ){
-					txTDbuff[ 0 ] = 0xA1;
-					txTDbuff[ 1 ] = 0;
-					txTDbuff[ 2 ] = 0;
-					txTDbuff[ 3 ] = 0;
-					txTDbuff[ 4 ] = 0;
-					txTDbuff[ 5 ] = 0;
-					txTDbuff[ 6 ] = 0;
-					txTDbuff[ 7 ] = 0;
-				}else{
-					txTDbuff[ 0 ] = 0xA1;
-					txTDbuff[ 1 ] = now.Year() << 8;
-					txTDbuff[ 2 ] = now.Year() << 8;
-					txTDbuff[ 3 ] = now.Month();
-					txTDbuff[ 4 ] = now.Day();
-					txTDbuff[ 5 ] = now.Hour();
-					txTDbuff[ 6 ] = now.Minute();
-					txTDbuff[ 7 ] = now.Second();
-				}
-
-				Serial.write( txTDbuff, sizeof( txTDbuff ) );
-#endif
+			now = Rtc.GetDateTime();
+			if( !now.IsValid() ){
+				txTDbuff[ 0 ] = 0xA1;
+				txTDbuff[ 1 ] = 0;
+				txTDbuff[ 2 ] = 0;
+				txTDbuff[ 3 ] = 0;
+				txTDbuff[ 4 ] = 0;
+				txTDbuff[ 5 ] = 0;
+				txTDbuff[ 6 ] = 0;
+				txTDbuff[ 7 ] = 0;
+			}else{
+				txTDbuff[ 0 ] = 0xA1;
+				txTDbuff[ 1 ] = now.Year() >> 8;
+				txTDbuff[ 2 ] = now.Year();
+				txTDbuff[ 3 ] = now.Month();
+				txTDbuff[ 4 ] = now.Day();
+				txTDbuff[ 5 ] = now.Hour();
+				txTDbuff[ 6 ] = now.Minute();
+				txTDbuff[ 7 ] = now.Second();
 			}
 
-			return;
+			Serial.write( txTDbuff, sizeof( txTDbuff ) );
+#endif
 		}
 		
 
