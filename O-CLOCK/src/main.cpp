@@ -194,7 +194,7 @@ void setup()
 		if( i > 0 ) strip.setPixelColor( i, strip.Color( 0, 0, 0 ) );
 		strip.setPixelColor( i, strip.Color( 255, 130, 28 ) );
 		strip.show();
-		delay( 100 );
+		delay( 70 );
 	}
 
 	clearStrip();
@@ -291,8 +291,8 @@ void updatePixels(uint8_t hour, uint8_t min)
 					litPixels( 27, 28 ); // FIVE
 					litPixels( 29, 31 ); // MINUTES
 				}
-			}else if( min >= 30 && min < 35 ){
-				litPixels( 42, 41 ); // HALF
+			}else{
+				litPixels( 41, 42 ); // HALF
 			}
 			litPixels( 25, 26 ); // PAST
 		}
