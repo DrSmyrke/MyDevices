@@ -20,7 +20,7 @@
 #endif
 
 #include <Adafruit_NeoPixel.h>
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(76, 6, NEO_GRB + NEO_KHZ800);	//count, pin
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(45, 6, NEO_GRB + NEO_KHZ800);	//count, pin
 
 
 
@@ -102,70 +102,7 @@ static uint16_t year = 0;
 
 
 
-
-void setup()
-{
-	Serial.begin( 115200 );
-
-	Timer1.setFrequency( 1 );
-	Timer1.enableISR( CHANNEL_A );
-
-#if defined( DS1307 )
-	Wire.begin();
-	time = new DS1307( TIMEZONE );
-#elif defined( DS1302 )
-	Rtc.Begin();
-	Serial.print("compiled: ");
-	Serial.print(__DATE__);
-	Serial.println(__TIME__);
-	
-	printDateTime( compiled );
-	Serial.println();
-
-	if( !Rtc.IsDateTimeValid() ){
-		// Common Causes:
-		//    1) first time you ran and the device wasn't running yet
-		//    2) the battery on the device is low or even missing
-
-		Serial.println( "RTC lost confidence in the DateTime!" );
-		Rtc.SetDateTime( compiled );
-	}
-
-	if( Rtc.GetIsWriteProtected() ){
-		Serial.println( "RTC was write protected, enabling writing now" );
-		Rtc.SetIsWriteProtected( false );
-	}
-
-	if( !Rtc.GetIsRunning() ){
-		Serial.println( "RTC was not actively running, starting now" );
-		Rtc.SetIsRunning( true );
-	}
-
-	RtcDateTime now = Rtc.GetDateTime();
-	if( now < compiled ){
-		Serial.println( "RTC is older than compile time!  (Updating DateTime)" );
-		Rtc.SetDateTime( compiled );
-	}
-#endif
-//	updateTime();
-	strip.begin();
-	strip.show();
-	strip.setBrightness( 10 );
-}
-
-void clearStrip(){
-	for( uint16_t i = 0; i < strip.numPixels(); i++ ){
-		strip.setPixelColor( i, strip.Color( 0, 0, 0 ) );
-	}
-}
-
-
-ISR(TIMER1_A)
-{
-	secondFlag = 1;
-	second++;
-}
-
+//----------------------------------------------------
 uint32_t getPixelColor(uint16_t i)
 {
 	byte WheelPos;
@@ -181,6 +118,7 @@ uint32_t getPixelColor(uint16_t i)
 	}
 }
 
+//----------------------------------------------------
 void litPixels(uint16_t start, uint16_t finish)
 {
 	for( uint16_t i = start; i <= finish; i++ ){
@@ -188,45 +126,134 @@ void litPixels(uint16_t start, uint16_t finish)
 	}
 }
 
+//----------------------------------------------------
+void clearStrip(){
+	for( uint16_t i = 0; i < strip.numPixels(); i++ ){
+		strip.setPixelColor( i, strip.Color( 0, 0, 0 ) );
+	}
+}
+
+
+
+
+
+
+//----------------------------------------------------
+void setup()
+{
+	Serial.begin( 115200 );
+
+	Timer1.setFrequency( 1 );
+	Timer1.enableISR( CHANNEL_A );
+
+#if defined( DS1307 )
+	Wire.begin();
+	time = new DS1307( TIMEZONE );
+#elif defined( DS1302 )
+	Rtc.Begin();
+	// Serial.print("compiled: ");
+	// Serial.print(__DATE__);
+	// Serial.println(__TIME__);
+	
+	// printDateTime( compiled );
+	// Serial.println();
+
+	if( !Rtc.IsDateTimeValid() ){
+		// Common Causes:
+		//    1) first time you ran and the device wasn't running yet
+		//    2) the battery on the device is low or even missing
+
+		// Serial.println( "RTC lost confidence in the DateTime!" );
+		Rtc.SetDateTime( compiled );
+	}
+
+	if( Rtc.GetIsWriteProtected() ){
+		// Serial.println( "RTC was write protected, enabling writing now" );
+		Rtc.SetIsWriteProtected( false );
+	}
+
+	if( !Rtc.GetIsRunning() ){
+		// Serial.println( "RTC was not actively running, starting now" );
+		Rtc.SetIsRunning( true );
+	}
+
+	RtcDateTime now = Rtc.GetDateTime();
+	if( now < compiled ){
+		// Serial.println( "RTC is older than compile time!  (Updating DateTime)" );
+		Rtc.SetDateTime( compiled );
+	}
+#endif
+//	updateTime();
+	strip.begin();
+	strip.show();
+	strip.setBrightness( 10 );
+
+
+
+	for( uint16_t i = 0; i < strip.numPixels(); i++ ){
+		if( i > 0 ) strip.setPixelColor( i, strip.Color( 0, 0, 0 ) );
+		strip.setPixelColor( i, strip.Color( 255, 130, 28 ) );
+		strip.show();
+		delay( 100 );
+	}
+
+	clearStrip();
+	strip.show();
+	// while(1);
+
+	second = 25;
+}
+
+
+
+
+ISR(TIMER1_A)
+{
+	secondFlag = 1;
+	second++;
+}
+
+
+
 void updateHour(uint8_t hour)
 {
 	switch( hour ){
 		case 1:
-			litPixels( 40, 42 ); // ONE
+			litPixels( 24, 24 ); // ONE
 		break;
 		case 2:
-			litPixels( 34, 36 ); // TWO
+			litPixels( 17, 18 ); // TWO
 		break;
 		case 3:
-			litPixels( 43, 46 ); // THREE
+			litPixels( 22, 23 ); // THREE
 		break;
 		case 4:
-			litPixels( 31, 33 ); // FOUR
+			litPixels( 19, 20 ); // FOUR
 		break;
 		case 5:
-			litPixels( 29, 30 ); // FIVE
+			litPixels( 21, 22 ); // FIVE
 		break;
 		case 6:
-			litPixels( 19, 20 ); // SIX
+			litPixels( 16, 16 ); // SIX
 		break;
 		case 7:
-			litPixels( 21, 24 ); // SEVEN
+			litPixels( 14, 15 ); // SEVEN
 		break;
 		case 8:
-			litPixels( 25, 28 ); // EIGHT
+			litPixels( 12, 13 ); // EIGHT
 		break;
 		case 9:
-			litPixels( 16, 18 ); // NINE
+			litPixels( 6, 7 ); // NINE
 		break;
 		case 10:
-			litPixels( 14, 15 ); // TEN
+			litPixels( 8, 8 ); // TEN
 		break;
 		case 11:
-			litPixels( 10, 13 ); // ELEVEN
+			litPixels( 9, 11 ); // ELEVEN
 		break;
 		case 12:
 		case 0:
-			litPixels( 0, 4 ); // TWELVE 
+			litPixels( 3, 5 ); // TWELVE 
 		break;
 	}
 }
@@ -234,7 +261,7 @@ void updateHour(uint8_t hour)
 void updatePixels(uint8_t hour, uint8_t min)
 {
 	clearStrip();
-	litPixels( 74, 76 ); // IT'S
+	litPixels( 39, 40 ); // IT'S
 
 	if( 0 == hour ){
 		hour = 12;
@@ -245,29 +272,29 @@ void updatePixels(uint8_t hour, uint8_t min)
 	if( min < 35 ){
 		updateHour( hour );
     	if(min >= 0 && min <5){
-			litPixels( 5, 9 ); // O'CLOCK
+			litPixels( 0, 2 ); // O'CLOCK
 		}else{
 			if( min < 30 ){
 				if( min >= 5 && min < 10 ){
-					litPixels( 55, 57 ); // FIVE
-					litPixels( 49, 54 ); // MINUTES
+					litPixels( 27, 28 ); // FIVE
+					litPixels( 29, 31 ); // MINUTES
 				}else if( min >= 10 && min < 15 ){
-					litPixels( 69, 70 ); // TEN
-					litPixels( 49, 54 ); // MINUTES
+					litPixels( 43, 43 ); // TEN
+					litPixels( 29, 31 ); // MINUTES
 				}else if( min >= 15 && min < 20 ){
-					litPixels( 58, 63 ); // QUARTER
+					litPixels( 36, 38 ); // QUARTER
 				}else if( min >= 20 && min < 25 ){
-					litPixels( 64, 68 ); // TWENTY
-					litPixels( 49, 54 ); // MINUTES
+					litPixels( 33, 35 ); // TWENTY
+					litPixels( 29, 31 ); // MINUTES
 				}else if( min >= 25 && min < 30 ){
-					litPixels( 64, 68 ); // TWENTY
-					litPixels( 55, 57 ); // FIVE
-					litPixels( 49, 54 ); // MINUTES
+					litPixels( 33, 35 ); // TWENTY
+					litPixels( 27, 28 ); // FIVE
+					litPixels( 29, 31 ); // MINUTES
 				}
 			}else if( min >= 30 && min < 35 ){
-				litPixels( 71, 73 ); // HALF
+				litPixels( 42, 41 ); // HALF
 			}
-			litPixels( 37, 39 ); // PAST
+			litPixels( 25, 26 ); // PAST
 		}
 	}else{
 		if( hour < 12 ){
@@ -276,39 +303,26 @@ void updatePixels(uint8_t hour, uint8_t min)
 			updateHour( 1 );
 		}
 		if( min >= 35 && min < 40 ){
-			litPixels( 64, 68 ); // TWENTY
-			litPixels( 55, 57 ); // FIVE
-			litPixels( 49, 54 ); // MINUTES
+			litPixels( 33, 35 ); // TWENTY
+			litPixels( 27, 28 ); // FIVE
+			litPixels( 29, 31 ); // MINUTES
 		}else if( min >= 40 && min < 45 ){
-			litPixels( 64, 68 ); // TWENTY
-			litPixels( 49, 54 ); // MINUTES
+			litPixels( 33, 35 ); // TWENTY
+			litPixels( 29, 31 ); // MINUTES
 		}else if( min >= 45 && min < 50 ){
-			litPixels( 58, 63 ); // QUARTER
+			litPixels( 36, 38 ); // QUARTER
 		}else if( min >= 50 && min < 55 ){
-			litPixels( 69, 70 ); // TEN
-			litPixels( 49, 54 ); // MINUTES
+			litPixels( 43, 43 ); // TEN
+			litPixels( 29, 31 ); // MINUTES
 		}else if( min >= 55 && min < 60 ){
-			litPixels( 55, 57 ); // FIVE
-			litPixels( 49, 54 ); // MINUTES
+			litPixels( 27, 28 ); // FIVE
+			litPixels( 29, 31 ); // MINUTES
 		}
-		litPixels( 47, 48 ); // TO
+		litPixels( 32, 32 ); // TO
 	}
 
 	strip.show();
 	rainbow += 1;
-}
-
-void demo()
-{
-	while( true ) {
-		for( uint8_t hour = 1; hour <= 12; hour++ ){
-			for( uint8_t min = 0; min < 60; min++ ){
-				updatePixels( hour, min );
-				rainbow += 1;
-				delay( 500 );
-			}
-		}
-	}
 }
 
 
@@ -351,8 +365,6 @@ void updateDateTime(void)
 //----------------------------------------------------
 void loop()
 {
-	//demo();
-
 	// ---------- CheckIn computer connection for programming ----------------------
 	if( Serial.available() ){
 		uint8_t sym = Serial.read();
@@ -407,6 +419,41 @@ void loop()
 			}
 			
 			updatePixels( hour, min );
+
+			if( !pcMode ){
+				switch( hour ){
+					case 0:		strip.setBrightness( 15 );	break;
+					case 1:		strip.setBrightness( 10 );	break;
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+						strip.setBrightness( 5 );
+					break;
+					case 6:	strip.setBrightness( 15 );	break;
+					case 7:	strip.setBrightness( 30 );	break;
+					case 8:	strip.setBrightness( 60 );	break;
+					case 9:
+					case 10:
+					case 11:
+					case 12:
+					case 13:
+					case 14:
+					case 15:
+					case 16:
+					case 17:
+					case 18:
+					case 19:
+					case 20:
+						strip.setBrightness( 120 );
+					break;
+					case 21:	strip.setBrightness( 60 );	break;
+					case 22:	strip.setBrightness( 30 );	break;
+					case 23:	strip.setBrightness( 15 );	break;
+			
+					default:	break;
+				}
+			}
 		}
 	}
 }
