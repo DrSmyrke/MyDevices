@@ -186,7 +186,7 @@ void setup()
 //	updateTime();
 	strip.begin();
 	strip.show();
-	strip.setBrightness( 10 );
+	strip.setBrightness( 3 );
 
 
 
