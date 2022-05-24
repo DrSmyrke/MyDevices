@@ -7,3 +7,4 @@ Makefile
 Makefile.*
 bin
 build
+ESP_DNS/.vscode/*
