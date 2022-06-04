@@ -18,7 +18,7 @@ void setup()
 	Serial.begin( 9600 );
 #endif
 	LittleFS.begin();
-	delay( 300 );
+	delay( 700 );
 	
 
 #ifdef __DEV
@@ -42,7 +42,7 @@ void setup()
 #endif
 			dnsServer.setErrorReplyCode( DNSReplyCode::NonExistentDomain );
 			dnsServer.start( DNS_PORT );
-			//dnsServer.addRecord( "*", apIP );
+			dnsServer.addRecord( "test.lan", IPAddress( 192, 168, 1, 1 ) );
 
 			if( LittleFS.exists( RULES_FILE ) ){	
 				File f = LittleFS.open( RULES_FILE, "r");
@@ -76,6 +76,7 @@ void setup()
 				}
 				f.close();
 			}
+		}else{
 #ifdef __DEV
 			Serial.println( "Wi-Fi AP mode" );
 #endif
@@ -94,11 +95,13 @@ void setup()
 	webServer.on( "/", handleRoot );
 	webServer.on( "/index.js", handleIndexJS );
 	webServer.on( "/index.css", handleIndexCSS );
-	webServer.on( "/getRules", handleGetRules );
+	webServer.on( "/rules", handleRules );
 	webServer.begin();
 
 	delay( 700 );
 #ifdef __DEV
+	IPAddress myIP = WiFi.softAPIP();
+	Serial.print("AP IP address: "); Serial.println(myIP);
 	Serial.println( "INIT OK" );
 #endif
 }

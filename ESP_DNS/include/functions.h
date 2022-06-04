@@ -4,7 +4,7 @@
 #include "main.h"
 
 //-------------------------------------------------------------------------------
-
+void DNS_request(const char* request, const uint8_t* ip);
 
 
 

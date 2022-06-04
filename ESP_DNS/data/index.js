@@ -1,6 +1,10 @@
 //-----------------------------------------------------------------------------
 var app = {
 	"debug": false,
+	"new":{
+		"domain": "",
+		"ip": "",
+	},
 };
 
 //-----------------------------------------------------------------------------
@@ -36,7 +40,7 @@ function buildUI()
 	}
 
 	var request = makeHttpObject();
-	request.open( "GET", "/getRules", true );
+	request.open( "GET", "/rules", true );
 	request.send( null );
 
 	request.onreadystatechange = function(){
@@ -59,12 +63,62 @@ function buildUI()
 					tr.innerHTML = '<td>' + data.domain + '</td><td>' + data.ip + '</td><td>*</td>';
 					table.appendChild( tr );
 				}
+
+				table.innerHTML += '<tr><th><input type="text" placeholder="domain name" lang="dname" onInput="newRuleProcess( ev, this );"></th><th><input type="text" placeholder="IP address" lang="ipaddr" onInput="newRuleProcess( ev, this );"></th><th><input type="button" value="ADD" onClick="newRuleProcess( ev, this );"></th></tr>';
 			}
 		}
 	};
 }
 
 //-----------------------------------------------------------------------------
+function newRuleProcess( event, inputObject = undefined )
+{
+	if( app.debug ) console.log( "newRuleProcess >: ", event, inputObject );
+
+	if( inputObject == undefined ){
+		console.error( "inputObject is undefined" );
+		return;
+	}
+
+	if( inputObject.tagName == undefined ){
+		console.error( "inputObject.tagName is undefined" );
+		return;
+	}
+
+	if( inputObject.type == undefined ){
+		console.error( "inputObject.type is undefined" );
+		return;
+	}
+
+	if( inputObject.lang == undefined ){
+		console.error( "inputObject.lang is undefined" );
+		return;
+	}
+
+	if( inputObject.value == undefined ){
+		console.error( "inputObject.value is undefined" );
+		return;
+	}
+
+	if( inputObject.tagName != "INPUT" ){
+		console.error( "inputObject.tagName is not input" );
+		return;
+	}
+
+	switch( inputObject.type ){
+		case "text":
+			if( inputObject.lang == "dname" ){
+				app.new.domain = inputObject.value;
+				// if() focusNextTableElement( inputObject );
+			}else if( inputObject.lang == "ipaddr" ){
+				app.new.ip = inputObject.value;
+			}
+		break;
+		case "button":
+
+		break;
+	}
+}
 
 //-----------------------------------------------------------------------------
 function CheckBit( reg, bit ) 
@@ -75,6 +129,18 @@ function CheckBit( reg, bit )
 }
 
 //-----------------------------------------------------------------------------
+function focusNextTableElement( element )
+{
+	if( element == undefined ) return;
+	if( element.parentNode == undefined ) return;
+	if( element.parentNode == null ) return;
+	if( element.parentNode.nextElementSibling == undefined ) return;
+	if( element.parentNode.nextElementSibling == null ) return;
+	if( element.parentNode.nextElementSibling.firstElementChild == undefined ) return;
+	if( element.parentNode.nextElementSibling.firstElementChild == null ) return;
+
+	element.parentNode.nextElementSibling.firstElementChild.focus();
+}
 
 //-----------------------------------------------------------------------------
 

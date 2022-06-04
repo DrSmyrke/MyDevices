@@ -11,7 +11,7 @@
 void handleRoot(void);
 void handleIndexJS(void);
 void handleIndexCSS(void);
-void handleGetRules(void);
+void handleRules(void);
 
 
 
