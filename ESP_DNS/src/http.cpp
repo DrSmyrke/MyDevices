@@ -45,16 +45,10 @@ void handleRules(void)
 	uint8_t i = 0;
 	dnsServer.resetRulesIndex();
 	while( dnsServer.nextRule() ){
-#ifdef __DEV
-		Serial.println( "dnsServer.nextRule()" );
-#endif
 		if( i > 0 ) strcat( pageBuff, ", " );
 
 		const char* dname = dnsServer.getDomainName();
 		const uint8_t* ip = dnsServer.getResolvedIP();
-#ifdef __DEV
-		Serial.println( dname );
-#endif
 
 		strcat( pageBuff, "\"" ); utoa( i++, tmpVal, 10 ); strcat( pageBuff, tmpVal ); strcat( pageBuff, "\": {" );
 			strcat( pageBuff, "\"ip\": \"" );

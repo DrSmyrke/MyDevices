@@ -10,6 +10,24 @@ ESP8266WebServer webServer( 80 );
 MainFlags flags;
 char tmpVal[ 10 ];
 char pageBuff[ WEB_PAGE_BUFF_SIZE ];
+IPAddress localIP( 0, 0, 0, 0 );
+
+//------------ FUNCTIONS --------------------------------------------------------
+void new_DNS_request(const char* dname, const uint8_t* ip)
+{
+	Serial.print( "DNS Request: " );
+	Serial.print( dname );
+	Serial.print( " [" );
+	for( uint8_t i = 0; i < 4; i++ ){
+		if( i > 0 ) Serial.print( '.' );
+		Serial.print( ip[ i ] );
+	}
+	Serial.print( " ]" );
+	Serial.println();
+}
+
+//-------------------------------------------------------------------------------
+
 
 //-------------------------------------------------------------------------------
 void setup()
@@ -41,8 +59,8 @@ void setup()
 			Serial.println( "Wi-Fi Client mode" );
 #endif
 			dnsServer.setErrorReplyCode( DNSReplyCode::NonExistentDomain );
-			dnsServer.start( DNS_PORT );
 			dnsServer.addRecord( "test.lan", IPAddress( 192, 168, 1, 1 ) );
+			dnsServer.addRecord( "test2.lan", IPAddress( 192, 168, 1, 1 ) );
 
 			if( LittleFS.exists( RULES_FILE ) ){	
 				File f = LittleFS.open( RULES_FILE, "r");
@@ -82,11 +100,13 @@ void setup()
 #endif
 			//Captive portal redirect
 			dnsServer.setErrorReplyCode( DNSReplyCode::NoError );
-			dnsServer.start( DNS_PORT );
 			dnsServer.addRecord( "*", apIP );
 			//
 		}
 	}
+
+	dnsServer.start( DNS_PORT );
+	dnsServer.newRequest( new_DNS_request );
 
 
 
@@ -100,8 +120,6 @@ void setup()
 
 	delay( 700 );
 #ifdef __DEV
-	IPAddress myIP = WiFi.softAPIP();
-	Serial.print("AP IP address: "); Serial.println(myIP);
 	Serial.println( "INIT OK" );
 #endif
 }
@@ -120,9 +138,16 @@ void loop()
 				digitalWrite( LED_BUILTIN, LOW );
 			}
 		}
+
+		if( localIP != WiFi.localIP() ){
+			localIP = WiFi.localIP();
+#ifdef __DEV
+			Serial.print("New IP address: "); Serial.println( localIP.toString() );
+#endif
+		}
 	}
 
 	webServer.handleClient();
-	if( esp::flags.ap_mode ) dnsServer.processNextRequest();
+	dnsServer.processNextRequest();
 }
 

@@ -64,7 +64,7 @@ function buildUI()
 					table.appendChild( tr );
 				}
 
-				table.innerHTML += '<tr><th><input type="text" placeholder="domain name" lang="dname" onInput="newRuleProcess( ev, this );"></th><th><input type="text" placeholder="IP address" lang="ipaddr" onInput="newRuleProcess( ev, this );"></th><th><input type="button" value="ADD" onClick="newRuleProcess( ev, this );"></th></tr>';
+				table.innerHTML += '<tr><th><input type="text" placeholder="domain name" lang="dname" onInput="newRuleProcess( event, this );"></th><th><input type="text" placeholder="IP address" lang="ipaddr" onInput="newRuleProcess( event, this );"></th><th><input type="button" value="ADD" onClick="newRuleProcess( event, this );"></th></tr>';
 			}
 		}
 	};
@@ -115,7 +115,19 @@ function newRuleProcess( event, inputObject = undefined )
 			}
 		break;
 		case "button":
-
+			var request = makeHttpObject();
+			var sendForm = new FormData();
+			request.open( "POST", "/rules", true );
+			sendForm.append( 'setRule', app.new.domain );
+			sendForm.append( 'ip', app.new.ip );
+			request.onreadystatechange = function(){
+				if( request.readyState == 4 ){
+					if( request.status == 200 ){
+						buildUI();
+					}
+				}
+			};
+			request.send( sendForm );
 		break;
 	}
 }
