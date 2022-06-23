@@ -8,11 +8,12 @@ void DNS_request(const char* request, const uint8_t* ip)
 	Serial.print( "DNS: " );
 	Serial.print( request );
 	if( ip != nullptr ){
-		Serial.print( " -> " );
-		utoa( ip[ 0 ], tmpVal, 10 ); Serial.print( tmpVal ); Serial.print( '.' );
-		utoa( ip[ 1 ], tmpVal, 10 ); Serial.print( tmpVal ); Serial.print( '.' );
-		utoa( ip[ 2 ], tmpVal, 10 ); Serial.print( tmpVal ); Serial.print( '.' );
-		utoa( ip[ 3 ], tmpVal, 10 ); Serial.print( tmpVal );
+		Serial.print( " [" );
+		for( uint8_t i = 0; i < 4; i++ ){
+			if( i > 0 ) Serial.print( '.' );
+			Serial.print( ip[ i ] );
+		}
+		Serial.print( "]" );
 	}
 	Serial.println();
 #endif
@@ -21,7 +22,10 @@ void DNS_request(const char* request, const uint8_t* ip)
 //-------------------------------------------------------------------------------
 void read_rules(void)
 {
-	if( LittleFS.exists( RULES_FILE ) ){	
+	if( LittleFS.exists( RULES_FILE ) ){
+#ifdef __DEV
+		Serial.println( "Read rules..." );
+#endif
 		File f = LittleFS.open( RULES_FILE, "r");
 		uint8_t i = 0;
 		uint8_t nameFlag = 1;
@@ -48,6 +52,9 @@ void read_rules(void)
 					i = 0;
 					nameFlag = 1;
 					dnsServer.addRecord( tmpNameBuff, IPAddress( tmpIPBuff ) );
+#ifdef __DEV
+					Serial.print( "[" ); Serial.print( IPAddress( tmpIPBuff ).toString() ); Serial.print( "] " ); Serial.println( tmpNameBuff );
+#endif
 				}
 			}
 		}
@@ -61,6 +68,9 @@ void save_rules(void)
 	File f = LittleFS.open( RULES_FILE, "w");
 
 	if( f ){
+#ifdef __DEV
+		Serial.println( "Save rules..." );
+#endif
 		uint8_t i = 0;
 		dnsServer.resetRulesIndex();
 		while( dnsServer.nextRule() ){
@@ -71,10 +81,26 @@ void save_rules(void)
 
 			f.write( dname, strlen( dname ) );
 			f.write( (char)'	' );
-			utoa( ip[ 0 ], tmpVal, 10 );  f.write( tmpVal, strlen( tmpVal ) );
-			utoa( ip[ 1 ], tmpVal, 10 );  f.write( tmpVal, strlen( tmpVal ) );
-			utoa( ip[ 2 ], tmpVal, 10 );  f.write( tmpVal, strlen( tmpVal ) );
-			utoa( ip[ 3 ], tmpVal, 10 );  f.write( tmpVal, strlen( tmpVal ) );
+#ifdef __DEV
+			Serial.print( "[" );
+#endif
+			utoa( ip[ 0 ], tmpVal, 10 ); f.write( (char)ip[ 0 ] );
+#ifdef __DEV
+			Serial.print( tmpVal ); Serial.print( "." );
+#endif
+			utoa( ip[ 1 ], tmpVal, 10 ); f.write( (char)ip[ 1 ] );
+#ifdef __DEV
+			Serial.print( tmpVal ); Serial.print( "." );
+#endif
+			utoa( ip[ 2 ], tmpVal, 10 ); f.write( (char)ip[ 2 ] );
+#ifdef __DEV
+			Serial.print( tmpVal ); Serial.print( "." );
+#endif
+			utoa( ip[ 3 ], tmpVal, 10 ); f.write( (char)ip[ 3 ] );
+#ifdef __DEV
+			Serial.print( tmpVal );
+			Serial.print( "] " ); Serial.println( dname );
+#endif
 		}
 		
 		f.close();

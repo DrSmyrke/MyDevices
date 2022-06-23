@@ -13,21 +13,8 @@ char pageBuff[ WEB_PAGE_BUFF_SIZE ];
 IPAddress localIP( 0, 0, 0, 0 );
 
 //------------ FUNCTIONS --------------------------------------------------------
-void new_DNS_request(const char* dname, const uint8_t* ip)
-{
-	Serial.print( "DNS Request: " );
-	Serial.print( dname );
-	Serial.print( " [" );
-	for( uint8_t i = 0; i < 4; i++ ){
-		if( i > 0 ) Serial.print( '.' );
-		Serial.print( ip[ i ] );
-	}
-	Serial.print( " ]" );
-	Serial.println();
-}
 
 //-------------------------------------------------------------------------------
-
 
 //-------------------------------------------------------------------------------
 void setup()
@@ -62,8 +49,9 @@ void setup()
 	}
 
 	dnsServer.start( DNS_PORT );
-	dnsServer.newRequest( new_DNS_request );
-
+#ifdef __DEV
+	dnsServer.newRequest( DNS_request );
+#endif
 
 
 	esp::pageBuff = pageBuff;

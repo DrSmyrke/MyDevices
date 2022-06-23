@@ -23,6 +23,7 @@ code, .code{
 header{
 	display: flex;
 	justify-content: space-between;
+	align-items: center;
 }
 
 hr{ color: #ff0ff0; }

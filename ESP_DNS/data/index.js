@@ -49,22 +49,32 @@ function buildUI()
 				if( app.debug ) console.log( "buildUI >:", request.responseText );
 				let dataObject = JSON.parse( request.responseText );
 
-				obj.innerHTML = "";
+				if( dataObject.hasOwnProperty( "rules" ) ){
 
-				let table = document.createElement( "table", );
-				table.innerHTML = '<tr><th>Domain</th><th>IP</th><th>Actions</th></tr>';
-				obj.appendChild( table );
+					obj.innerHTML = "";
 
-				for( let num in dataObject ){
-					let data = dataObject[ num ]; 
-					if( !data.hasOwnProperty( "domain" ) ) continue;
-					if( !data.hasOwnProperty( "ip" ) ) continue;
-					let tr = document.createElement( "tr", );
-					tr.innerHTML = '<td>' + data.domain + '</td><td>' + data.ip + '</td><td>*</td>';
-					table.appendChild( tr );
+					let table = document.createElement( "table", );
+					table.innerHTML = '<tr><th>Domain</th><th>IP</th><th>Actions</th></tr>';
+					obj.appendChild( table );
+
+					for( let num in dataObject.rules ){
+						let data = dataObject.rules[ num ]; 
+						if( !data.hasOwnProperty( "domain" ) ) continue;
+						if( !data.hasOwnProperty( "ip" ) ) continue;
+						let tr = document.createElement( "tr", );
+						tr.innerHTML = '<td>' + data.domain + '</td><td>' + data.ip + '</td><td>*</td>';
+						table.appendChild( tr );
+					}
+
+					table.innerHTML += '<tr><th><input type="text" placeholder="domain name" lang="dname" onInput="newRuleProcess( event, this );"></th><th><input type="text" placeholder="IP address" lang="ipaddr" onInput="newRuleProcess( event, this );"></th><th><input type="button" value="ADD" onClick="newRuleProcess( event, this );"></th></tr>';
 				}
 
-				table.innerHTML += '<tr><th><input type="text" placeholder="domain name" lang="dname" onInput="newRuleProcess( event, this );"></th><th><input type="text" placeholder="IP address" lang="ipaddr" onInput="newRuleProcess( event, this );"></th><th><input type="button" value="ADD" onClick="newRuleProcess( event, this );"></th></tr>';
+				if( dataObject.hasOwnProperty( "version" ) ){
+					let vLabel = document.getElementById( 'versionL' );
+					if( vLabel != undefined ){
+						vLabel.innerHTML = "v" + dataObject.version;
+					}
+				}
 			}
 		}
 	};
