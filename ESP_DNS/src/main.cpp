@@ -34,22 +34,11 @@ void setup()
 {
 #ifdef __DEV
 	Serial.begin( 9600 );
-#endif
-	LittleFS.begin();
-	delay( 700 );
-	
-
-#ifdef __DEV
 	Serial.println( "BOOTING..." );
-
-	Dir root = LittleFS.openDir( "/" );
-	while( root.next() ){
-		File file = root.openFile("r");
-		Serial.print( ": " );
-		Serial.println( root.fileName() );
-		file.close();
-	}
 #endif
+
+	esp::init();
+
 	IPAddress apIP( 10, 10, 10, 10 );
 	bool isClient = esp::isClient();
 	bool res = esp::wifi_init( DEVICE_NAME, apIP, apIP, IPAddress( 255, 255, 255, 0 ) );
@@ -59,48 +48,15 @@ void setup()
 			Serial.println( "Wi-Fi Client mode" );
 #endif
 			dnsServer.setErrorReplyCode( DNSReplyCode::NonExistentDomain );
-			dnsServer.addRecord( "test.lan", IPAddress( 192, 168, 1, 1 ) );
-			dnsServer.addRecord( "test2.lan", IPAddress( 192, 168, 1, 1 ) );
-
-			if( LittleFS.exists( RULES_FILE ) ){	
-				File f = LittleFS.open( RULES_FILE, "r");
-				uint8_t i = 0;
-				uint8_t nameFlag = 1;
-				char tmpNameBuff[ MAX_DNSNAME_LENGTH ];
-				uint8_t tmpIPBuff[ 4 ];
-
-				while( f.available() ){
-					char sym;
-					f.readBytes( &sym, 1 );
-
-					if( nameFlag ){
-						if( sym == '	' ){
-							tmpNameBuff[ i++ ] = '\0';
-							i = 0;
-							nameFlag = 0;
-							continue;
-						}
-
-						if( i >= MAX_DNSNAME_LENGTH ) continue;
-						tmpNameBuff[ i++ ] = sym;
-					}else{
-						tmpIPBuff[ i++ ] = (uint8_t)sym;
-						if( i == 4 ){
-							i = 0;
-							nameFlag = 1;
-							dnsServer.addRecord( tmpNameBuff, IPAddress( tmpIPBuff ) );
-						}
-					}
-				}
-				f.close();
-			}
+			read_rules();
 		}else{
 #ifdef __DEV
-			Serial.println( "Wi-Fi AP mode" );
+			Serial.print( "Wi-Fi AP mode " );
+			Serial.print("IP: "); Serial.println( WiFi.softAPIP().toString() );
 #endif
 			//Captive portal redirect
 			dnsServer.setErrorReplyCode( DNSReplyCode::NoError );
-			dnsServer.addRecord( "*", apIP );
+			dnsServer.addRecord( "*", WiFi.softAPIP() );
 			//
 		}
 	}
@@ -111,10 +67,8 @@ void setup()
 
 
 	esp::pageBuff = pageBuff;
-	esp::addWebServerPages( &webServer, true, true );
+	esp::addWebServerPages( &webServer, true, true, true );
 	webServer.on( "/", handleRoot );
-	webServer.on( "/index.js", handleIndexJS );
-	webServer.on( "/index.css", handleIndexCSS );
 	webServer.on( "/rules", handleRules );
 	webServer.begin();
 

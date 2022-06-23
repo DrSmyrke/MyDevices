@@ -3,7 +3,7 @@
 
 
 //-------------------------------------------------------------------------------
-#define DEVICE_NAME							"DNS_Secondary"
+#define DEVICE_NAME							"DNS_Secondary_Server"
 #define WEB_PAGE_BUFF_SIZE					2048
 #define RULES_FILE							"/rules"
 #define MAX_DNS_RECORDS						128
@@ -32,7 +32,7 @@ typedef struct{
 //-------------------------------------------------------------------------------
 extern DNS_Server dnsServer;
 extern ESP8266WebServer webServer;
-extern MainFlags flags;
+// extern MainFlags flags;
 extern char tmpVal[ 10 ];
 extern char pageBuff[ WEB_PAGE_BUFF_SIZE ];
 

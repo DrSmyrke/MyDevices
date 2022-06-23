@@ -10,18 +10,6 @@ void handleRoot(void)
 }
 
 //-------------------------------------------------------------------------------
-void handleIndexJS(void)
-{
-	esp::webSendFile( &webServer, "/index.js", "text/javascript" );
-}
-
-//-------------------------------------------------------------------------------
-void handleIndexCSS(void)
-{
-	esp::webSendFile( &webServer, "/index.css", "text/css" );
-}
-
-//-------------------------------------------------------------------------------
 void handleRules(void)
 {
 	esp::setNoCacheContent( &webServer );
@@ -32,6 +20,7 @@ void handleRules(void)
 			IPAddress ip;
 			ip.fromString( webServer.arg( "ip" ) );
 			dnsServer.addRecord( webServer.arg( "setRule" ).c_str(), ip );
+			save_rules();
 			webServer.send ( 200, "text/html", "OK" );
 		}else{
 			webServer.send ( 200, "text/html", "ERROR" );
@@ -67,6 +56,7 @@ void handleRules(void)
 }
 
 //-------------------------------------------------------------------------------
+
 //-------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------

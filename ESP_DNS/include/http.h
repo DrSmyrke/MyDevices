@@ -9,10 +9,7 @@
 
 //-------------------------------------------------------------------------------
 void handleRoot(void);
-void handleIndexJS(void);
-void handleIndexCSS(void);
 void handleRules(void);
-
 
 
 
