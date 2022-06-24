@@ -19,7 +19,7 @@ function makeHttpObject()
 //-----------------------------------------------------------------------------
 window.onload = function(){
 	if( document.location.pathname == "/" ){
-		buildUpdatePage();
+		buildIndexPage();
 	}
 
 	updateData();
@@ -55,6 +55,8 @@ function buildIndexPage()
 //-----------------------------------------------------------------------------
 function buildUpdatePage()
 {
+	window.stop();
+	
 	let obj = document.getElementById( 'contentBox' );
 	if( obj == undefined ){
 		console.error( "contentBox is undefined" );
