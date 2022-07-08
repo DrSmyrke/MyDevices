@@ -1,90 +1,82 @@
 #include "main.h"
 #include "functions.h"
-#include "timer.h"
+#include <timer.h>
 #include "http.h"
 
 //-------------------------------------------------------------------------------
-DNSServer dnsServer;
+Timer timer0( 0, 1000 );
+DNS_Server dnsServer;
 ESP8266WebServer webServer( 80 );
-MainFlags flags;
-const IPAddress apIP( 10, 10, 10, 10 );
-const IPAddress apMASK( 255, 255, 255, 0 );
-int8_t countNetworks;
 ATCommand AT;
 GSM_Data gsmData;
 char tmpVal[ 10 ];
-char gsm_data_buff[ 512 ];
-long wtimer										= 0;
-uint8_t check_counter							= 0;
-
+char pageBuff[ WEB_PAGE_BUFF_SIZE ];
+char gsm_data_buff[ GSM_DATA_BUFF_SIZE ];
+uint8_t check_counter					= 0;
+long wtimer								= 0;
 
 //-------------------------------------------------------------------------------
 void setup()
 {
-	flags.apMode								= 0;
-	flags.timer									= 0;
-	flags.captivePortalAccess					= 0;
-	countNetworks								= 0;
-
-	LittleFS.begin();
-	Serial.begin( 115200 );
-	Serial.swap();
-	delay( 200 );
-	Serial.flush();
-
 	pinMode( LED_BUILTIN, OUTPUT );
 	digitalWrite( LED_BUILTIN, HIGH );
 	pinMode( GSM_RESET_PIN, OUTPUT );
-	// GSM_BEGIN;
+
+	esp::init();
+
+	GSM_BEGIN;
 	GSM_RESET();
 	delay( 3000 );
+
 	sendATCommand( "AT", true );
 	sendATCommand( GSM_SMS_INIT, true );
 
 
 
-	delay( 100 );
-	countNetworks = WiFi.scanNetworks();
-
-	if( esp::isClient() ){
-		wifi_STA_init();
-	}else{
-		flags.apMode							= 1;
-		wifi_AP_init();
+	IPAddress apIP( 10, 10, 10, 10 );
+	bool res = esp::wifi_init( DEVICE_NAME, apIP, apIP, IPAddress( 255, 255, 255, 0 ) );
+	if( res ){
+		if( esp::isClient() ){
+#ifdef __DEV
+			Serial.println( "Wi-Fi Client mode" );
+#endif
+			dnsServer.setErrorReplyCode( DNSReplyCode::NonExistentDomain );
+		}else{
+#ifdef __DEV
+			Serial.println( "Wi-Fi AP mode" );
+#endif
+			//Captive portal redirect
+			dnsServer.setErrorReplyCode( DNSReplyCode::NoError );
+			dnsServer.addRecord( "*", apIP );
+			dnsServer.start( DNS_PORT );
+			//
+		}
 	}
-
-	timer_init();
-
+	
+	esp::pageBuff = pageBuff;
+	esp::addWebServerPages( &webServer, true, true, true );
 	webServer.on( "/", handleRoot );
-	webServer.on( "/info", handleInfo );
-	webServer.on( "/exec", handleExec );
-	webServer.on( "/wifi", handleWifiConfig );
-	//Captive portal
-	if( flags.apMode ){
-		webServer.on( "/fwlink", handleCaptivePortal );
-		webServer.on( "/generate_204", handleCaptivePortal );
-		webServer.on( "/favicon.ico", handleCaptivePortal );
-	}
-	webServer.onNotFound( handleNotFound );
 	webServer.begin();
 
-	delay( 100 );
+	delay( 700 );
+#ifdef __DEBUG
+	Serial1.println( "INIT OK" );
+#endif
 }
 
 //-------------------------------------------------------------------------------
 void loop()
 {
-	if( flags.timer ){
-		flags.timer = 0;
+	if( timer0.isInterrupt() ){
+		timer0.confirmInerrupt();
 
-		if( !flags.apMode ){
-			if( !WiFiConnectionState() ){
+		if( !esp::flags.ap_mode ){
+			if( !esp::isWiFiConnection() ){
 				digitalWrite( LED_BUILTIN, HIGH );
 				WiFi.reconnect();
 			}else{
 				digitalWrite( LED_BUILTIN, LOW );
 			}
-			// ArduinoOTA.handle();
 		}
 
 		switch( check_counter++ ){
@@ -99,17 +91,16 @@ void loop()
 	if( GSM_AVAILABLE ){
 		char sym = (char) GSM_READ;
 		AT.addSymbol( sym );
-#ifdef __DEV
-		Serial.print( sym );
+#ifdef __DEBUG
+		Serial1.print( sym );
+		Serial1.print( ":" ); Serial1.println( AT.getData() );
 #endif
-		// Serial.print( ":" );Serial.println( AT.getData() );
-		
 		GSM_responseProcess();
 	}
 
 	webServer.handleClient();
 	
-	if( flags.apMode ){
+	if( esp::flags.ap_mode ){
 		dnsServer.processNextRequest();
 	}
 }

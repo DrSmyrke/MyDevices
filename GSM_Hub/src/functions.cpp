@@ -2,93 +2,10 @@
 #include "main.h"
 
 //-------------------------------------------------------------------------------
-bool WiFiConnectionState(void)
-{
-	bool state = false;
-	if( WiFi.status() == WL_CONNECTED ) state = true;
-	if( WiFi.status() == WL_CONNECTED && WiFi.localIP().toString() == "0.0.0.0" ) state = false;
-	return state;
-}
 
 //-------------------------------------------------------------------------------
-void wifi_STA_init(void)
-{
-	char ssid[ ESP_CONFIG_SSID_MAX_LEN ];
-	char skey[ ESP_CONFIG_KEY_MAX_LEN ];
-
-	WiFi.hostname( DEVICE_NAME );
-	WiFi.softAPdisconnect( true );
-
-	WiFi.mode( WiFiMode_t::WIFI_STA );
-
-
-	if( esp::readSTAconfig( ssid, skey ) ){
-		WiFi.begin( ssid, skey );
-	}else{
-		ESP.restart();
-		return;
-	}
-
-	
-
-	delay( 5000 );
-
-	if( WiFi.waitForConnectResult() != WL_CONNECTED ){
-		delay( 1000 );
-		ESP.restart();
-	}
-
-	// ArduinoOTA.onStart([]() {
-	// 	String type;
-	// 	if (ArduinoOTA.getCommand() == U_FLASH) {
-	// 		type = "sketch";
-	// 	} else {  // U_FS
-	// 		type = "filesystem";
-	// 	}
-
-	// 	// NOTE: if updating FS this would be the place to unmount FS using FS.end()
-	// 	Serial.println("Start updating " + type);
-	// });
-	// ArduinoOTA.onEnd([]() {
-	// 	Serial.println("\nEnd");
-	// });
-	// ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-	// 	Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-	// });
-	// ArduinoOTA.onError([](ota_error_t error) {
-	// 	Serial.printf("Error[%u]: ", error);
-	// 	if (error == OTA_AUTH_ERROR) {
-	// 		Serial.println("Auth Failed");
-	// 	} else if (error == OTA_BEGIN_ERROR) {
-	// 		Serial.println("Begin Failed");
-	// 	} else if (error == OTA_CONNECT_ERROR) {
-	// 		Serial.println("Connect Failed");
-	// 	} else if (error == OTA_RECEIVE_ERROR) {
-	// 		Serial.println("Receive Failed");
-	// 	} else if (error == OTA_END_ERROR) {
-	// 		Serial.println("End Failed");
-	// 	}
-	// });
-	// ArduinoOTA.begin();
-}
 
 //-------------------------------------------------------------------------------
-void wifi_AP_init(void)
-{
-	WiFi.hostname( DEVICE_NAME );
-	WiFi.disconnect();
-
-	WiFi.mode( WiFiMode_t::WIFI_AP );
-	WiFi.softAPConfig( apIP, apIP, apMASK );
-	bool res = WiFi.softAP( DEVICE_NAME, "1234567890" );
-
-	delay( 600 );
-
-	if( res ){
-		dnsServer.setErrorReplyCode( DNSReplyCode::NoError );
-		dnsServer.start( 53, "*", apIP );
-	}
-}
 
 //-------------------------------------------------------------------------------
 void GSM_RESET()
@@ -100,8 +17,8 @@ void GSM_RESET()
 //-------------------------------------------------------------------------------
 bool sendATCommand(const char* cmd, bool waiting, bool process)
 {
-	#ifdef __DEV
-		Serial.print( ">:" );Serial.println( cmd );
+#ifdef __DEBUG
+		Serial1.print( ">:" ); Serial1.println( cmd );
 #endif
 	Serial.println( cmd );
 
@@ -131,8 +48,8 @@ bool sendATCommand(const char* cmd, bool waiting, bool process)
 bool GSM_responseProcess(void)
 {
 	if( AT.isOK() ){
-#ifdef __DEV
-		Serial.print( "[OK]:" );Serial.println( AT.getData() );
+#ifdef __DEBUG
+		Serial1.print( "[OK]:" ); Serial1.println( AT.getData() );
 #endif
 		
 		// if( strcmp( AT.getData(), GSM_SMS_INIT ) == 0 ){
@@ -161,8 +78,8 @@ bool GSM_responseProcess(void)
 		}else{
 			// char* pointer = strchr( AT.getData(), '\n' );
 			if( AT.isCommand( true ) ){
-#ifdef __DEV
-				Serial.print( "[CMD OK]:" );Serial.print( AT.getCmd() );Serial.print( " = " );Serial.println( AT.getValue() );
+#ifdef __DEBUG
+				Serial1.print( "[CMD OK]:" ); Serial1.print( AT.getCmd() ); Serial1.print( " = " ); Serial1.println( AT.getValue() );
 #endif
 
 				if( strcmp( AT.getCmd(), "+CSQ" ) == 0 ){
@@ -173,9 +90,9 @@ bool GSM_responseProcess(void)
 
 					gsmData.rssi = atoi( value );
 					gsmData.ber = atoi( comma );
-#ifdef __DEV
-					Serial.print( "RSSI:" );Serial.print( value );Serial.print( "/" );Serial.print( gsmData.rssi );
-					Serial.print( " BER:" );Serial.print( comma );Serial.print( "/" );Serial.println( gsmData.ber );
+#ifdef __DEBUG
+					Serial1.print( "RSSI:" ); Serial1.print( value ); Serial1.print( "/" ); Serial1.print( gsmData.rssi );
+					Serial1.print( " BER:" ); Serial1.print( comma ); Serial1.print( "/" ); Serial1.println( gsmData.ber );
 #endif
 				}else if( strcmp( AT.getCmd(), "+CREG" ) == 0 ){
 					char* value = AT.getValue();
@@ -186,8 +103,8 @@ bool GSM_responseProcess(void)
 					uint8_t n = atoi( value );
 					if( n > 1 ) comma[ 1 ] = '\0';
 					gsmData.reg = atoi( comma );
-#ifdef __DEV
-					Serial.print( "REG:" );Serial.println( gsmData.reg );
+#ifdef __DEBUG
+					Serial1.print( "REG:" ); Serial1.println( gsmData.reg );
 #endif
 				}else if( strcmp( AT.getCmd(), "+COPS" ) == 0 ){
 					char* mode = AT.getValue();
@@ -208,8 +125,8 @@ bool GSM_responseProcess(void)
 							strcpy( gsmData.opLabel, opLable );
 						}
 					}
-#ifdef __DEV
-					Serial.print( "OPERATOR:" );Serial.println( gsmData.opLabel );
+#ifdef __DEBUG
+					Serial1.print( "OPERATOR:" ); Serial1.println( gsmData.opLabel );
 #endif
 				}else if( strcmp( AT.getCmd(), "+CBC" ) == 0 ){
 					uint8_t bcs = 0;
@@ -239,8 +156,8 @@ bool GSM_responseProcess(void)
 
 		return true;
 	}else if( AT.isERROR() ){
-#ifdef __DEV
-		Serial.print( "[ERR]:" );Serial.println( AT.getData() );
+#ifdef __DEBUG
+		Serial1.print( "[ERR]:" ); Serial1.println( AT.getData() );
 #endif
 		// if( strcmp( AT.getData(), GSM_SMS_CHECK ) == 0 ){
 		// 	sendATCommand( "AT+CMGDA=\"DEL ALL\"", false );
@@ -251,8 +168,8 @@ bool GSM_responseProcess(void)
 
 		AT.resetBuffer();
 	}else if( AT.isCommand() ){
-#ifdef __DEV
-		Serial.print( "[CMD]:" );Serial.print( AT.getCmd() );Serial.print( " = " );Serial.println( AT.getValue() );
+#ifdef __DEBUG
+		Serial1.print( "[CMD]:" ); Serial1.print( AT.getCmd() ); Serial1.print( " = " ); Serial1.println( AT.getValue() );
 #endif
 		if( strcmp( AT.getCmd(), "+CMTI" ) == 0 ){
 			char* comma = strchr( AT.getValue(), ',' ) + 1;

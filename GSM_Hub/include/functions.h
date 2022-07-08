@@ -9,9 +9,6 @@
 
 
 //-------------------------------------------------------------------------------
-bool WiFiConnectionState(void);
-void wifi_STA_init(void);
-void wifi_AP_init(void);
 void GSM_RESET();
 bool sendATCommand(const char* cmd, bool waiting, bool process = true);
 // bool sendATCommand(char* cmd, bool waiting);

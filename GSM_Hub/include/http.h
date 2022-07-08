@@ -8,15 +8,7 @@
 
 
 //-------------------------------------------------------------------------------
-void setNoCacheContent(void);
-void redirect(void);
 void handleRoot(void);
-void handleInfo(void);
-void handleExec(void);
-void handleWifiConfig(void);
-void CaptivePortalPage(void);
-void handleCaptivePortal(void);
-void handleNotFound(void);
 
 
 
