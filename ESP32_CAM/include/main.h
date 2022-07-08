@@ -34,6 +34,7 @@
 extern WebServer webServer;
 extern char tmpVal[ 12 ];
 extern char pageBuff[ WEB_PAGE_BUFF_SIZE ];
+extern uint8_t updateFlag;
 
 
 #endif //__MAIN_H_
