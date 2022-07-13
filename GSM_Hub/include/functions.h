@@ -10,7 +10,6 @@
 
 //-------------------------------------------------------------------------------
 void GSM_RESET();
-bool sendATCommand(const char* cmd, bool waiting, bool process = true);
 // bool sendATCommand(char* cmd, bool waiting);
 bool GSM_responseProcess(void);
 

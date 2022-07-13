@@ -4,10 +4,9 @@
 
 //-------------------------------------------------------------------------------
 #define DEVICE_NAME							"GSM_HUB"
-#define GSM_RESET_PIN						14
-#define GSM_BEGIN							Serial.begin( 115200 )
-#define GSM_AVAILABLE						Serial.available()
-#define GSM_READ							Serial.read()
+#define GSM_RESET_PIN						D7
+#define GSM_PORT							gsmSerial
+#define GSM_BEGIN							GSM_PORT.begin( 115200 )
 #define WEB_PAGE_BUFF_SIZE					2048
 #define GSM_DATA_BUFF_SIZE					256
 
@@ -35,14 +34,14 @@ typedef struct {
 } GSM_Data;
 
 //-------------------------------------------------------------------------------
+extern SoftwareSerial GSM_PORT;
 extern DNS_Server dnsServer;
 extern ESP8266WebServer webServer;
-extern ATCommand AT;
+extern AT at;
 extern GSM_Data gsmData;
 extern char tmpVal[ 10 ];
 extern char pageBuff[ WEB_PAGE_BUFF_SIZE ];
 extern char gsm_data_buff[ GSM_DATA_BUFF_SIZE ];
-extern long wtimer;
 
 //-------------------------------------------------------------------------------
 

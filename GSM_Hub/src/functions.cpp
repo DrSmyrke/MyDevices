@@ -15,87 +15,58 @@ void GSM_RESET()
 }
 
 //-------------------------------------------------------------------------------
-bool sendATCommand(const char* cmd, bool waiting, bool process)
-{
-#ifdef __DEBUG
-		Serial1.print( ">:" ); Serial1.println( cmd );
-#endif
-	Serial.println( cmd );
-
-	if( !waiting ) return false;
-
-	AT.resetBuffer();
-	wtimer = millis();
-
-	while( !AT.isOK() && !AT.isERROR() && ( wtimer + 37000 > millis() ) ){
-		if( GSM_AVAILABLE ){
-			AT.addSymbol( GSM_READ );
-		}
-	}
-	
-	if( !AT.isOK() && !AT.isERROR() ){
-		while( GSM_AVAILABLE ){
-			AT.addSymbol( GSM_READ );
-		}
-	}
-
-	if( !process ) return true;
-
-	return GSM_responseProcess();
-}
 
 //-------------------------------------------------------------------------------
 bool GSM_responseProcess(void)
 {
-	if( AT.isOK() ){
-#ifdef __DEBUG
-		Serial1.print( "[OK]:" ); Serial1.println( AT.getData() );
-#endif
+	if( at.isRing() ){
+		at.sendATCommand( "ATH", false );
+		// at.sendATCommand( "ATA", false ); //Answer
+		return true;
+	}
+
+	if( at.isOK() ){
+		ESP_DEBUG( ">:%s\n", at.getData() );
 		
-		// if( strcmp( AT.getData(), GSM_SMS_INIT ) == 0 ){
+		// if( strcmp( at.getData(), GSM_SMS_INIT ) == 0 ){
 		// 	init_flags.sms = 1;
-		// }else if( strcmp( AT.getData(), GSM_CONTYPE_INIT ) == 0 ){
-		if( strcmp( AT.getData(), GSM_CONTYPE_INIT ) == 0 ){
+		// }else if( strcmp( at.getData(), GSM_CONTYPE_INIT ) == 0 ){
+		if( strcmp( at.getData(), GSM_CONTYPE_INIT ) == 0 ){
 			// init_flags.contype = 1;
-		}else if( strcmp( AT.getData(), GSM_APN_INIT ) == 0 ){
+		}else if( strcmp( at.getData(), GSM_APN_INIT ) == 0 ){
 			// init_flags.apn = 1;
-		}else if( strcmp( AT.getData(), GSM_USER_INIT ) == 0 ){
+		}else if( strcmp( at.getData(), GSM_USER_INIT ) == 0 ){
 			// init_flags.user = 1;
-		}else if( strcmp( AT.getData(), GSM_PWD_INIT ) == 0 ){
+		}else if( strcmp( at.getData(), GSM_PWD_INIT ) == 0 ){
 			// init_flags.pwd = 1;
-		// }else if( strcmp( AT.getData(), GSM_PDP_DEFINE ) == 0 ){
+		// }else if( strcmp( at.getData(), GSM_PDP_DEFINE ) == 0 ){
 		// 	init_flags.pdp = 1;
-		// }else if( strcmp( AT.getData(), GSM_PDP_ACTIVATE ) == 0 ){
+		// }else if( strcmp( at.getData(), GSM_PDP_ACTIVATE ) == 0 ){
 		// 	init_flags.pdp_activ = 1;
-		// }else if( strcmp( AT.getData(), GSM_GPRS_INIT ) == 0 ){
+		// }else if( strcmp( at.getData(), GSM_GPRS_INIT ) == 0 ){
 		// 	init_flags.gprs = 1;
-		// }else if( strcmp( AT.getData(), GSM_GPRS_ATTACH ) == 0 ){
+		// }else if( strcmp( at.getData(), GSM_GPRS_ATTACH ) == 0 ){
 		// 	init_flags.gprs_attach = 1;
-		// }else if( strcmp( AT.getData(), GSM_HTTP_INIT ) == 0 ){
+		// }else if( strcmp( at.getData(), GSM_HTTP_INIT ) == 0 ){
 		// 	init_flags.http = 1;
-		// }else if( strcmp( AT.getData(), GSM_HTTPCID_INIT ) == 0 ){
+		// }else if( strcmp( at.getData(), GSM_HTTPCID_INIT ) == 0 ){
 		// 	init_flags.httpcid = 1;
 		}else{
-			// char* pointer = strchr( AT.getData(), '\n' );
-			if( AT.isCommand( true ) ){
-#ifdef __DEBUG
-				Serial1.print( "[CMD OK]:" ); Serial1.print( AT.getCmd() ); Serial1.print( " = " ); Serial1.println( AT.getValue() );
-#endif
-
-				if( strcmp( AT.getCmd(), "+CSQ" ) == 0 ){
-					char* value = AT.getValue();
+			// char* pointer = strchr( at.getData(), '\n' );
+			if( at.isCommand( true ) ){
+				ESP_DEBUG( ">:[CMD]:%s = %s\n", at.getCmd(), at.getValue() );
+				if( strcmp( at.getCmd(), "+CSQ" ) == 0 ){
+					char* value = at.getValue();
 					char* comma = strchr( value, ',' );
 					comma[ 0 ] = '\0';
 					comma++;
 
 					gsmData.rssi = atoi( value );
 					gsmData.ber = atoi( comma );
-#ifdef __DEBUG
-					Serial1.print( "RSSI:" ); Serial1.print( value ); Serial1.print( "/" ); Serial1.print( gsmData.rssi );
-					Serial1.print( " BER:" ); Serial1.print( comma ); Serial1.print( "/" ); Serial1.println( gsmData.ber );
-#endif
-				}else if( strcmp( AT.getCmd(), "+CREG" ) == 0 ){
-					char* value = AT.getValue();
+
+					ESP_DEBUG( "RSSI: %s/%d BER: %s/%d\n", value, gsmData.rssi, comma, gsmData.ber );
+				}else if( strcmp( at.getCmd(), "+CREG" ) == 0 ){
+					char* value = at.getValue();
 					char* comma = strchr( value, ',' );
 					comma[ 0 ] = '\0';
 					comma++;
@@ -103,11 +74,10 @@ bool GSM_responseProcess(void)
 					uint8_t n = atoi( value );
 					if( n > 1 ) comma[ 1 ] = '\0';
 					gsmData.reg = atoi( comma );
-#ifdef __DEBUG
-					Serial1.print( "REG:" ); Serial1.println( gsmData.reg );
-#endif
-				}else if( strcmp( AT.getCmd(), "+COPS" ) == 0 ){
-					char* mode = AT.getValue();
+
+					ESP_DEBUG( "REG: %d\n", gsmData.reg );
+				}else if( strcmp( at.getCmd(), "+COPS" ) == 0 ){
+					char* mode = at.getValue();
 					char* format = strchr( mode, ',' );
 					if( format != NULL ){
 						format[ 0 ] = '\0';
@@ -125,15 +95,14 @@ bool GSM_responseProcess(void)
 							strcpy( gsmData.opLabel, opLable );
 						}
 					}
-#ifdef __DEBUG
-					Serial1.print( "OPERATOR:" ); Serial1.println( gsmData.opLabel );
-#endif
-				}else if( strcmp( AT.getCmd(), "+CBC" ) == 0 ){
+
+					ESP_DEBUG( "OPERATOR: %s\n", gsmData.opLabel );
+				}else if( strcmp( at.getCmd(), "+CBC" ) == 0 ){
 					uint8_t bcs = 0;
 					uint8_t bcl = 0;
 					// uint8_t vol = 0;
 
-					char* mode = AT.getValue();
+					char* mode = at.getValue();
 					char* prz = strchr( mode, ',' );
 					if( prz != NULL ){
 						prz[ 0 ] = '\0';
@@ -152,31 +121,27 @@ bool GSM_responseProcess(void)
 			}
 		}
 
-		AT.resetBuffer();
+		at.resetBuffer();
 
 		return true;
-	}else if( AT.isERROR() ){
-#ifdef __DEBUG
-		Serial1.print( "[ERR]:" ); Serial1.println( AT.getData() );
-#endif
-		// if( strcmp( AT.getData(), GSM_SMS_CHECK ) == 0 ){
+	}else if( at.isERROR() ){
+		ESP_DEBUG( "[ERR]: %s\n", at.getData() );
+		// if( strcmp( at.getData(), GSM_SMS_CHECK ) == 0 ){
 		// 	sendATCommand( "AT+CMGDA=\"DEL ALL\"", false );
 		// 	delay( 15000 );
 		// }
 
 		// sendATCommand( "AT+CMEE?", false );
 
-		AT.resetBuffer();
-	}else if( AT.isCommand() ){
-#ifdef __DEBUG
-		Serial1.print( "[CMD]:" ); Serial1.print( AT.getCmd() ); Serial1.print( " = " ); Serial1.println( AT.getValue() );
-#endif
-		if( strcmp( AT.getCmd(), "+CMTI" ) == 0 ){
-			char* comma = strchr( AT.getValue(), ',' ) + 1;
+		at.resetBuffer();
+	}else if( at.isCommand() ){
+		ESP_DEBUG( "[CMD]: %s = %s\n", at.getCmd(), at.getValue() );
+		if( strcmp( at.getCmd(), "+CMTI" ) == 0 ){
+			char* comma = strchr( at.getValue(), ',' ) + 1;
 			uint8_t indx = atoi( comma );
 
 			strcpy( gsm_data_buff, "AT+CMGR=" );itoa( indx, tmpVal, 10 );strcat( gsm_data_buff, tmpVal );
-			sendATCommand( gsm_data_buff, false );
+			at.sendATCommand( gsm_data_buff, false );
 			// delay( 1500 );
 			// sendATCommand( "AT+CMGDA=\"DEL ALL\"", false );
 			// delay( 15000 );
@@ -184,7 +149,7 @@ bool GSM_responseProcess(void)
 			// sendATCommand( gsm_data_buff, false );
 		}
 
-		AT.resetBuffer();
+		at.resetBuffer();
 		return true;
 	}
 
