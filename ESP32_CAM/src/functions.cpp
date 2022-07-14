@@ -2,12 +2,14 @@
 #include "main.h"
 
 //-------------------------------------------------------------------------------
-void updateDevice(void)
+uint16_t updateDevice(void)
 {
-	esp::downloadUpdate( FIRMWARE_REPOSITORY, "/index.html" );
-	esp::downloadUpdate( FIRMWARE_REPOSITORY, "/index.css" );
-	esp::downloadUpdate( FIRMWARE_REPOSITORY, "/index.js" );
-	if( esp::downloadUpdate( FIRMWARE_REPOSITORY, ESP_FIRMWARE_FILENAME ) ) ;//updateFlag = 1;
+	if( !esp::downloadUpdate( FIRMWARE_REPOSITORY, "/index.html" ) ) return 402;
+	if( !esp::downloadUpdate( FIRMWARE_REPOSITORY, "/index.css" ) ) return 403;
+	if( !esp::downloadUpdate( FIRMWARE_REPOSITORY, "/index.js" ) ) return 405;
+	if( !esp::downloadUpdate( FIRMWARE_REPOSITORY, ESP_FIRMWARE_FILENAME ) ) return 406;
+
+	return 200;
 }
 
 //-------------------------------------------------------------------------------
