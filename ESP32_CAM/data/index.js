@@ -101,7 +101,7 @@ function checkUpdate()
 		return;
 	}
 
-	obj.innerHTML = 'Loading...';
+	obj.innerHTML = 'Checking...';
 
 	var request = makeHttpObject();
 	request.open( "GET", "/update?cmd=check_update", true );
@@ -149,12 +149,12 @@ function updateDevice()
 			if( request.status == 200 ){
 				if( app.debug ) console.log( "updateDevice >:", request.responseText );
 				obj.innerHTML = "Success";
-				document.location.reload();
+				document.location = '/';
 			}
 		}else if( request.status == 401 ){
 			obj.innerHTML = request.responseText;
 		}else{
-			obj.innerHTML = "Unknown Error";
+			obj.innerHTML = "Unknown Error [" + request.status + "]";
 		}
 	};
 }

@@ -48,7 +48,7 @@ void setup()
 
 	updateFlag				= 0;
 
-	Serial.begin(115200);
+	Serial.begin( 115200 );
 	Serial.setDebugOutput(true);
 	Serial.println();
 

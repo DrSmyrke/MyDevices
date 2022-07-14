@@ -25,6 +25,8 @@ void handleGet(void)
 	strcpy( pageBuff, "{" );
 	//-------------------------------------------------------------
 	strcat( pageBuff, "\"version\": " ); strcat( pageBuff, FIRMWARE_SECOND_VERSION );
+	strcat( pageBuff, ", \"total\": " ); utoa( SPIFFS.totalBytes(), tmpVal, 10 ); strcat( pageBuff, tmpVal );
+	strcat( pageBuff, ", \"used\": " ); utoa( SPIFFS.usedBytes(), tmpVal, 10 ); strcat( pageBuff, tmpVal );
 	//-------------------------------------------------------------
 	strcat( pageBuff, "}" );
 	webServer.send ( 200, "application/json", pageBuff );
@@ -39,8 +41,7 @@ void handleUpdate(void)
 	//-------------------------------------------------------------
 	if( webServer.hasArg( "cmd" ) ){
 		if( webServer.arg( "cmd" ) == "update" ){
-			updateDevice();
-			webServer.send ( 200, "text/html", "" );
+			webServer.send ( updateDevice(), "text/html", "" );
 			return;
 		}else if( webServer.arg( "cmd" ) == "check_update" ){
 			uint32_t version = atoi( FIRMWARE_SECOND_VERSION );
