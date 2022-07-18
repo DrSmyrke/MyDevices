@@ -63,7 +63,34 @@ function buildUpdatePage()
 		return;
 	}
 
-	obj.innerHTML = '<input type="button" value="Check update" onClick="checkUpdate();"> <span id="newVersionL"><span>';
+	// obj.innerHTML = '<input type="button" value="Check update" onClick="checkUpdate();"> <span id="newVersionL"><span>';
+	obj.innerHTML = '<form method="POST" action="/update" enctype="multipart/form-data" onSubmit="return uploadForm( this, \'statusLabel\' );"> <input type="hidden" name="cmd" value="update"> <input type="file" name="update" > <input type="submit" value="Update"> </form> <span id="statusLabel"><span>';
+}
+
+//-----------------------------------------------------------------------------
+function uploadForm( form, viewBoxID )
+{
+	var viewBoxObj = document.getElementById( viewBoxID );
+	if( viewBoxObj == undefined ){
+		viewBoxObj = document.getElementById( formViewBoxID );
+		if( viewBoxObj == undefined ){
+			console.log( "form.js: uploadForm: viewBoxObj not found" );
+			return;
+		}
+	}
+
+	viewBoxObj.innerHTML = 'Uploading...';
+
+	let formRequest = makeHttpObject();
+	let formData = new FormData( form );
+	formRequest.open( "POST", form.action, false );
+	formRequest.send( formData );
+
+	viewBoxObj.innerHTML = formRequest.responseText;
+
+	form.reset();
+
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -93,71 +120,71 @@ function updateData()
 }
 
 //-----------------------------------------------------------------------------
-function checkUpdate()
-{
-	let obj = document.getElementById( 'newVersionL' );
-	if( obj == undefined ){
-		console.error( "newVersionL is undefined" );
-		return;
-	}
+// function checkUpdate()
+// {
+// 	let obj = document.getElementById( 'newVersionL' );
+// 	if( obj == undefined ){
+// 		console.error( "newVersionL is undefined" );
+// 		return;
+// 	}
 
-	obj.innerHTML = 'Checking...';
+// 	obj.innerHTML = 'Checking...';
 
-	var request = makeHttpObject();
-	request.open( "GET", "/update?cmd=check_update", true );
-	request.send( null );
+// 	var request = makeHttpObject();
+// 	request.open( "GET", "/update?cmd=check_update", true );
+// 	request.send( null );
 
-	request.onreadystatechange = function(){
-		if( request.readyState == 4 ){
-			if( request.status == 200 ){
-				if( app.debug ) console.log( "checkUpdate >:", request.responseText );
-				let dataObject = JSON.parse( request.responseText );
+// 	request.onreadystatechange = function(){
+// 		if( request.readyState == 4 ){
+// 			if( request.status == 200 ){
+// 				if( app.debug ) console.log( "checkUpdate >:", request.responseText );
+// 				let dataObject = JSON.parse( request.responseText );
 
-				if( dataObject.hasOwnProperty( "newVersion" ) ){
-					obj.innerHTML = "Firmvare available: v" + dataObject.newVersion;
-					let newVersion = Number( dataObject.newVersion ).toFixed();
-					if( newVersion > app.version ){
-						obj.innerHTML += ' <input type="button" value="UPDATE" onClick="updateDevice();">';
-					}
-				}
-			}else if( request.status == 401 ){
-				obj.innerHTML = request.responseText;
-			}else{
-				obj.innerHTML = "Unknown Error";
-			}
-		}
-	};
-}
+// 				if( dataObject.hasOwnProperty( "newVersion" ) ){
+// 					obj.innerHTML = "Firmvare available: v" + dataObject.newVersion;
+// 					let newVersion = Number( dataObject.newVersion ).toFixed();
+// 					if( newVersion > app.version ){
+// 						obj.innerHTML += ' <input type="button" value="UPDATE" onClick="updateDevice();">';
+// 					}
+// 				}
+// 			}else if( request.status == 401 ){
+// 				obj.innerHTML = request.responseText;
+// 			}else{
+// 				obj.innerHTML = "Unknown Error";
+// 			}
+// 		}
+// 	};
+// }
 
 //-----------------------------------------------------------------------------
-function updateDevice()
-{
-	let obj = document.getElementById( 'contentBox' );
-	if( obj == undefined ){
-		console.error( "contentBox is undefined" );
-		return;
-	}
+// function updateDevice()
+// {
+// 	let obj = document.getElementById( 'contentBox' );
+// 	if( obj == undefined ){
+// 		console.error( "contentBox is undefined" );
+// 		return;
+// 	}
 
-	obj.innerHTML = 'Updating...';
+// 	obj.innerHTML = 'Updating...';
 
-	var request = makeHttpObject();
-	request.open( "GET", "/update?cmd=update", true );
-	request.send( null );
+// 	var request = makeHttpObject();
+// 	request.open( "GET", "/update?cmd=update", true );
+// 	request.send( null );
 
-	request.onreadystatechange = function(){
-		if( request.readyState == 4 ){
-			if( request.status == 200 ){
-				if( app.debug ) console.log( "updateDevice >:", request.responseText );
-				obj.innerHTML = "Success";
-				document.location = '/';
-			}
-		}else if( request.status == 401 ){
-			obj.innerHTML = request.responseText;
-		}else{
-			obj.innerHTML = "Unknown Error [" + request.status + "]";
-		}
-	};
-}
+// 	request.onreadystatechange = function(){
+// 		if( request.readyState == 4 ){
+// 			if( request.status == 200 ){
+// 				if( app.debug ) console.log( "updateDevice >:", request.responseText );
+// 				obj.innerHTML = "Success";
+// 				document.location = '/';
+// 			}
+// 		}else if( request.status == 401 ){
+// 			obj.innerHTML = request.responseText;
+// 		}else{
+// 			obj.innerHTML = "Unknown Error [" + request.status + "]";
+// 		}
+// 	};
+// }
 
 //-----------------------------------------------------------------------------
 
