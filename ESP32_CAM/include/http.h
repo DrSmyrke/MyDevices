@@ -9,7 +9,7 @@ void handleRoot(void);
 void handleGet(void);
 void handleUpdate(void);
 void writeProcess(uint8_t *data, const size_t size);
-
+void handleUpload(void);
 //-------------------------------------------------------------------------------
 
 

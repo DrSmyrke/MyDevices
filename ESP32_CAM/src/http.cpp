@@ -31,8 +31,6 @@ void handleGet(void)
 	strcpy( pageBuff, "{" );
 	//-------------------------------------------------------------
 	strcat( pageBuff, "\"version\": " ); strcat( pageBuff, FIRMWARE_SECOND_VERSION );
-	strcat( pageBuff, ", \"total\": " ); utoa( SPIFFS.totalBytes(), tmpVal, 10 ); strcat( pageBuff, tmpVal );
-	strcat( pageBuff, ", \"used\": " ); utoa( SPIFFS.usedBytes(), tmpVal, 10 ); strcat( pageBuff, tmpVal );
 	//-------------------------------------------------------------
 	strcat( pageBuff, "}" );
 	webServer.send ( 200, "application/json", pageBuff );
@@ -104,7 +102,7 @@ void handleUpdate(void)
 		}else if( webServer.arg( "cmd" ) == "check_update" ){
 			uint32_t version = atoi( FIRMWARE_SECOND_VERSION );
 			strcpy( pageBuff, "{" );
-				strcat( pageBuff, "\"newVersion\": " ); utoa( esp::checkingUpdate( FIRMWARE_REPOSITORY, version ), tmpVal, 10 ); strcat( pageBuff, tmpVal );
+				strcat( pageBuff, "\"newVersion\": " ); utoa( esp::checkingUpdate( FIRMWARE_REPOSITORY, version ), esp::tmpVal, 10 ); strcat( pageBuff, esp::tmpVal );
 			strcat( pageBuff, "}" );
 
 			webServer.send ( 200, "application/json", pageBuff );
@@ -138,6 +136,56 @@ void writeProcess(uint8_t *data, const size_t size)
 }
 
 //-------------------------------------------------------------------------------
+void handleUpload(void)
+{
+	/*
+	HTTPUpload& upload = webServer.upload();
+	String filename;
+	
+	switch( upload.status ){
+		case UPLOAD_FILE_START:
+			filename = upload.filename;
+			if(!filename.startsWith("/")) filename = "/"+filename;
+
+			if( filename == CONFFILE ){
+				uploadType = upload_type_file;
+				fsUploadFile = SPIFFS.open(CONFFILE, "w");
+			}
+			if( upload.filename == UPDFILE ){
+				WiFiUDP::stopAll();
+				uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+				uploadType = upload_type_firmware;
+				Update.begin(maxSketchSpace);
+			}
+		break;
+		case UPLOAD_FILE_WRITE:
+			if( uploadType == upload_type_file && fsUploadFile ) fsUploadFile.write(upload.buf,upload.currentSize);
+			//if( fsUploadFile) fsUploadFile.write(upload.buf,upload.currentSize);
+			//if(Update.write(upload.buf, upload.currentSize) != upload.currentSize)
+			if( uploadType == upload_type_firmware) Update.write(upload.buf, upload.currentSize);
+		break;
+		case UPLOAD_FILE_END:
+			if( uploadType == upload_type_file && fsUploadFile ){
+				fsUploadFile.close();
+				delay(500);
+				webServer.sendHeader("Location","/config");
+				webServer.send(303);
+			}
+			if( uploadType == upload_type_firmware){
+				if( Update.end(true) ){
+					//webServer.sendHeader("Location","/config");
+					//webServer.send(303);
+					//delay(500);
+					ESP.restart();
+				}else{
+					webServer.send(500, "text/html", "Upload error" );
+				}
+			}
+		break;
+	}
+	*/
+}
+
 //-------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------

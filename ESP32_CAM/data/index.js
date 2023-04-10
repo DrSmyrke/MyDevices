@@ -68,6 +68,31 @@ function buildUpdatePage()
 }
 
 //-----------------------------------------------------------------------------
+function buildInfoPage()
+{
+	window.stop();
+	
+	let obj = document.getElementById( 'contentBox' );
+	if( obj == undefined ){
+		console.error( "contentBox is undefined" );
+		return;
+	}
+
+	var request = makeHttpObject();
+	request.open( "GET", "/sysinfo", true );
+	request.send( null );
+
+	request.onreadystatechange = function(){
+		if( request.readyState == 4 ){
+			if( request.status == 200 ){
+				if( app.debug ) console.log( "buildInfoPage >:", request.responseText );
+				obj.innerHTML = request.responseText;
+			}
+		}
+	};
+}
+
+//-----------------------------------------------------------------------------
 function uploadForm( form, viewBoxID )
 {
 	var viewBoxObj = document.getElementById( viewBoxID );

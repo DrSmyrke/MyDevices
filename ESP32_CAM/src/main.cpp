@@ -1,6 +1,16 @@
 #include "main.h"
 #include "esp_camera.h"
 #include <WiFi.h>
+#include <WiFiUdp.h>
+
+
+// #include <arduino_homekit_server.h>
+// #include <homekit/homekit.h>
+// #include <homekit/characteristics.h>
+
+
+// #include "homekit_main.h"
+
 
 //
 // WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
@@ -20,18 +30,18 @@
 
 #include "camera_pins.h"
 
-const char* ssid = "SECRETNET";
-const char* password = "##SSD3000##";
-
 void startCameraServer();
 
 
 //------------------- VARIABLES ---------------------------------------------------------
 WebServer webServer( 8080 );
-char tmpVal[ 12 ];
 char pageBuff[ WEB_PAGE_BUFF_SIZE ];
 uint8_t updateFlag;
 TaskHandle_t Task1;
+
+// extern "C" homekit_server_config_t config;
+// extern "C" homekit_characteristic_t outlet_on;
+// extern "C" homekit_characteristic_t outlet_in_use;
 
 //---------------------------------------------------------------------------------------
 void webServerTaskCode(void *parameter)
@@ -48,11 +58,6 @@ void setup()
 
 	updateFlag				= 0;
 
-	Serial.begin( 115200 );
-	Serial.setDebugOutput(true);
-	Serial.println();
-
-	esp::printAllFiles( Serial );
 
 	// pinMode( FLASH_LED_PIN, OUTPUT );
 	pinMode( LED_PIN, OUTPUT );
@@ -133,7 +138,7 @@ void setup()
 	startCameraServer();
 
 
-
+	esp::pageBuff = pageBuff;
 	esp::addWebServerPages( &webServer, true, true, true );
 	webServer.on( "/", handleRoot );
 	webServer.on( "/get", HTTP_GET, handleGet );
@@ -141,19 +146,22 @@ void setup()
 		esp::webSendFile( &webServer, ESP_FIRMWARE_FILENAME, "application/binary" );
 	} );
 	webServer.on( "/update", HTTP_ANY, handleUpdate );
+	webServer.on( "/upload", HTTP_POST, [](){}, handleUpload );
 	webServer.begin();
 
 	xTaskCreatePinnedToCore( webServerTaskCode, "Task1", 10000, NULL, 0, &Task1, 0 );
 
+
 	digitalWrite( LED_PIN, LOW );
 	// ledcWrite( 0, 0 );
+
 }
 
 //---------------------------------------------------------------------------------------
 void loop()
 {
-	if( updateFlag ){
-		updateFlag = 0;
-		if( esp::updateFromFS() ) ESP.restart();
-	}
+	// if( updateFlag ){
+	// 	updateFlag = 0;
+	// 	if( esp::updateFromFS() ) ESP.restart();
+	// }
 }
